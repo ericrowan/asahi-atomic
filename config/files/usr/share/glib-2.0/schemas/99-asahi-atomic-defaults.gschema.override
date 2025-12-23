@@ -1,0 +1,11 @@
+[org.gnome.desktop.interface]
+color-scheme='prefer-dark'
+# font-name='Cantarell 11'
+
+[org.gnome.desktop.peripherals.touchpad]
+tap-to-click=true
+natural-scroll=true
+
+# Mac-like Keybinds (Swap Ctrl/Command)
+[org.gnome.desktop.input-sources]
+xkb-options=['altwin:ctrl_win']
