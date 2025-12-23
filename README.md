@@ -16,8 +16,7 @@ A custom OS image that brings the power of Fedora Silverblue to M1/M2 MacBooks. 
 
 ## Installation
 
-## COMING SOON.
-
+**COMING SOON.**
 We are currently finalizing the build pipeline. The goal is a simple script that takes over an existing Asahi partition and replaces it with this image.
 
 ## Philosophy
