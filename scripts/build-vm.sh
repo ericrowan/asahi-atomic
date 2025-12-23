@@ -44,7 +44,9 @@ mount "${LOOP}p1" /mnt/asahi_vm/boot/efi
 
 # 5. Install OS & Force GRUB
 echo "🚀 Installing OS (from Root Storage)..."
+# ADDED: -e LANG=C.UTF-8 -e LC_ALL=C.UTF-8 to fix locale path errors
 podman run --rm --privileged --pid=host --security-opt label=type:unconfined_t \
+    -e LANG=C.UTF-8 -e LC_ALL=C.UTF-8 \
     -v /dev:/dev -v /mnt/asahi_vm:/target \
     $IMAGE \
     /bin/bash -c "

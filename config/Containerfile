@@ -1,14 +1,18 @@
 FROM quay.io/fedora-asahi-remix-atomic-desktops/silverblue:42
 
-# Install VM Bootloader Tools (Required for QEMU)
+# 1. Install VM Bootloader Tools (Keep this, it works)
 RUN rpm-ostree install \
     grub2-efi-aa64 \
     grub2-efi-aa64-modules \
     grub2-tools \
     shim-aa64 \
-    fish \
-    fastfetch \
     && rpm-ostree cleanup -m
 
-# Unlock Root (User: root / Pass: fedora) - Keeps us from getting locked out
-# RUN echo "root:fedora" | chpasswd
+# 2. Copy & Run Cortex Modules (THIS IS THE MISSING PIECE)
+COPY config/modules /tmp/modules
+RUN chmod +x /tmp/modules/*.sh && \
+    /tmp/modules/01-packages.sh && \
+    /tmp/modules/02-tweaks.sh
+
+# 3. Final Cleanup
+RUN rm -rf /tmp/* /var/tmp/*
