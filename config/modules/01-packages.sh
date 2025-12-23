@@ -1,14 +1,14 @@
 #!/bin/bash
 set -ouex pipefail
 
-# Decrapify
+# 1. Decrapify
 rpm-ostree override remove \
     firefox firefox-langpacks \
     gnome-tour \
     gnome-software-rpm-ostree \
     yelp
 
-# Core Layers
+# 2. Install System Tools (Bake these in!)
 rpm-ostree install \
     fish \
     just \
@@ -16,7 +16,14 @@ rpm-ostree install \
     tailscale \
     gnome-tweaks \
     sushi \
-    fastfetch
+    btop \
+    htop \
+    fastfetch \
+    git \
+    neovim \
+    openssl \
+    cifs-utils \
+    nfs-utils
 
-# Manual Binary Installs (Starship)
+# 3. Starship Binary
 curl -sS https://starship.rs/install.sh | sh -s -- -y -b /usr/bin
