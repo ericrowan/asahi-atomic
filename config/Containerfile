@@ -1,0 +1,14 @@
+FROM quay.io/fedora-asahi-remix-atomic-desktops/silverblue:42
+
+# Install VM Bootloader Tools (Required for QEMU)
+RUN rpm-ostree install \
+    grub2-efi-aa64 \
+    grub2-efi-aa64-modules \
+    grub2-tools \
+    shim-aa64 \
+    fish \
+    fastfetch \
+    && rpm-ostree cleanup -m
+
+# Unlock Root (User: root / Pass: fedora) - Keeps us from getting locked out
+# RUN echo "root:fedora" | chpasswd
