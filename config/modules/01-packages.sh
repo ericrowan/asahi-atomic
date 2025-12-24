@@ -3,6 +3,10 @@ set -ouex pipefail
 
 echo "📦 Installing System Packages..."
 
+# --- VARIABLES ---
+GUM_VERSION="0.13.0"
+GUM_URL="https://github.com/charmbracelet/gum/releases/download/v${GUM_VERSION}/gum_${GUM_VERSION}_linux_arm64.tar.gz"
+
 # 1. Decrapify (Remove stock bloat)
 rpm-ostree override remove \
     firefox firefox-langpacks \
@@ -29,11 +33,18 @@ rpm-ostree install \
     nfs-utils
 
 # 3. Install Starship (Shell Prompt)
+# Using official script for architecture detection
 curl -sS https://starship.rs/install.sh | sh -s -- -y -b /usr/bin
 
-# 4. Install Gum (The TUI Builder) - ARM64 Manual Install
-# We fetch the binary directly to avoid repo missing errors
-echo "🍬 Installing Gum..."
-GUM_VERSION="0.13.0"
-curl -sL "https://github.com/charmbracelet/gum/releases/download/v${GUM_VERSION}/gum_${GUM_VERSION}_linux_arm64.tar.gz" | tar xz -C /usr/bin --strip-components=1 "gum_${GUM_VERSION}_linux_arm64/gum"
+# 4. Install Gum (TUI Builder)
+echo "🍬 Installing Gum v${GUM_VERSION}..."
+cd /tmp
+curl -L -o gum.tar.gz "$GUM_URL"
+tar -xf gum.tar.gz
+
+# Find the 'gum' binary anywhere in the extracted files and move it
+find . -type f -name "gum" -exec mv {} /usr/bin/gum \;
 chmod +x /usr/bin/gum
+
+# Cleanup
+rm -rf gum.tar.gz *gum*
