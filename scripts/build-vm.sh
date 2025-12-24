@@ -28,6 +28,10 @@ function cleanup {
     mountpoint -q /mnt/asahi_vm/boot/efi && umount /mnt/asahi_vm/boot/efi
     mountpoint -q /mnt/asahi_vm && umount /mnt/asahi_vm
     losetup -d "$LOOP" 2>/dev/null || true
+    # Fix ownership so the user can run the VM without sudo
+    if [ -n "$SUDO_USER" ]; then
+        chown $SUDO_USER:$SUDO_USER "$DISK_IMG"
+    fi
     echo "✅ VM Ready: $DISK_IMG"
 }
 trap cleanup EXIT
