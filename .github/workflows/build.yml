@@ -1,9 +1,11 @@
-name: Build Asahi Atomic
+name: Build WavyOS
 on:
   push:
     branches: [main]
+    paths:
+      - "config/**" # Only build if config changes
   schedule:
-    - cron: "0 0 * * *" # Build daily at midnight
+    - cron: "0 0 * * *" # Daily build at midnight
 
 env:
   IMAGE_NAME: asahi-atomic
@@ -37,4 +39,3 @@ jobs:
       - name: Push Image
         run: |
           podman push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
-          echo "::notice::Image pushed to: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest"
