@@ -2,45 +2,43 @@
 # ──────────────────────────────────────────────────────────────────────────────
 #  PROJECT CORTEX: USER HYDRATION
 # ──────────────────────────────────────────────────────────────────────────────
-# Usage: Run once after installing the OS to set up your /home folder.
+# Usage: bash scripts/setup-user.sh
 
 set -e
 echo "💧 Hydrating User Space..."
 
-# 1. FLATHUB (Applications)
-# We use a declarative list. If you want to change apps, edit this list.
+# 1. FLATHUB & APPS
 flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
 
-APPS=(
-    "com.github.tchx84.Flatseal"
-    "com.mattjakeman.ExtensionManager"
-    "org.gnome.World.PikaBackup"
-    "dev.zed.Zed"
-    "org.mozilla.firefox"
-    "org.signal.Signal"
-    "com.bitwig.BitwigStudio"
-    "com.valvesoftware.Steam"
-    "io.github.flattool.Warehouse" # (Bazaar replacement)
-)
+# Define path to list (Assumes script runs from repo root)
+FLATPAK_LIST="config/flatpaks.txt"
 
-echo "📦 Installing Flatpaks..."
-flatpak install -y flathub "${APPS[@]}"
+if [ -f "$FLATPAK_LIST" ]; then
+    echo "📦 Installing Flatpaks from config..."
+    # Read file, strip comments, install
+    APPS=$(grep -vE '^\s*#|^\s*$' "$FLATPAK_LIST" | tr '\n' ' ')
+    flatpak install -y flathub $APPS
+else
+    echo "⚠️  Warning: $FLATPAK_LIST not found. Skipping Flatpaks."
+fi
 
-# 2. HOMEBREW (The Package Manager for /home)
+# 2. HOMEBREW
 if [ ! -d "/home/linuxbrew/.linuxbrew" ]; then
     echo "🍺 Installing Homebrew..."
     CI=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
-    # Configure Fish path
     mkdir -p ~/.config/fish
     echo 'eval (/home/linuxbrew/.linuxbrew/bin/brew shellenv)' >> ~/.config/fish/config.fish
 fi
 
-# 3. DISTROBOX (The Dev Container)
-# We use the declarative config file we created earlier!
+# 3. DISTROBOX
 if [ -f "config/distrobox.ini" ]; then
     echo "📦 Assembling Distroboxes..."
-    distrobox assemble create --file config/distrobox.ini
+    if command -v distrobox &> /dev/null; then
+        distrobox assemble create --file config/distrobox.ini
+    else
+        echo "⚠️  Distrobox not found on host. Skipping."
+    fi
 fi
 
 echo "✨ User Space Ready."

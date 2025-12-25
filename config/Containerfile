@@ -1,6 +1,6 @@
 FROM quay.io/fedora-asahi-remix-atomic-desktops/silverblue:42
 
-# 1. Install Bootloader Tools
+# 1. Install VM Bootloader Tools
 RUN rpm-ostree install \
     grub2-efi-aa64 \
     grub2-efi-aa64-modules \
@@ -9,15 +9,23 @@ RUN rpm-ostree install \
     plymouth-plugin-script \
     && rpm-ostree cleanup -m
 
-# 2. Copy Files (Direct Overlay)
-# This copies config/files/usr -> /usr and config/files/etc -> /etc automatically
-COPY config/files /
+# 2. Setup Build Context
+# We copy the whole config folder so modules can read packages.txt
+COPY config /tmp/config
 
-# 3. Run Modules
-COPY config/modules /tmp/modules
-RUN chmod +x /tmp/modules/*.sh && \
-    /tmp/modules/01-packages.sh && \
-    /tmp/modules/02-tweaks.sh
+# 3. Apply System Files (Overlay)
+# We copy the static files (like welcome.sh) directly to the system
+RUN cp -r /tmp/config/files/usr /usr && \
+    cp -r /tmp/config/files/etc /etc
 
-# 4. Cleanup & User
+# 4. Run Modules
+# We execute the scripts found in the config folder
+RUN chmod +x /tmp/config/modules/*.sh && \
+    /tmp/config/modules/01-packages.sh && \
+    /tmp/config/modules/02-tweaks.sh
+
+# 5. Cleanup
 RUN rm -rf /tmp/* /var/tmp/*
+
+# 6. Unlock Root (For VM debugging)
+RUN echo "root:fedora" | chpasswd
