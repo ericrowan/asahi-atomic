@@ -1,0 +1,12 @@
+# System
+com.github.tchx84.Flatseal
+com.mattjakeman.ExtensionManager
+org.gnome.World.PikaBackup
+
+# Dev
+dev.zed.Zed
+com.raggesilver.BlackBox
+
+# Social
+org.signal.Signal
+com.discordapp.Discord
