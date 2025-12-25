@@ -10,11 +10,11 @@ fi
 echo "🔄 Starting Build Loop..."
 
 # 1. Build the Container (Root Scope)
-# We use sudo to ensure the image is available for the build-vm script
-sudo podman build --pull --no-cache -f config/Containerfile -t localhost/asahi-atomic:latest .
+CLOUD_IMAGE="ghcr.io/ericrowan/asahi-atomic:latest"
+podman pull $CLOUD_IMAGE
 
 # 2. Build the VM Disk
-sudo bash scripts/build-vm.sh
+IMAGE=$CLOUD_IMAGE sudo -E bash scripts/build-vm.sh
 
 # 3. Run the VM
 if command -v qemu-system-aarch64 &> /dev/null; then
