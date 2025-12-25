@@ -1,27 +1,27 @@
 #!/bin/bash
 # ──────────────────────────────────────────────────────────────────────────────
-#  PROJECT CORTEX: CLOUD TEST RUNNER
+#  PROJECT CORTEX: CLOUD VERIFICATION
 # ──────────────────────────────────────────────────────────────────────────────
-# Usage: bash scripts/test-cloud.sh
-# Goal: Pulls the latest image from GitHub, makes a VM disk, and boots it.
-#       SAVES YOUR SSD.
+# Usage: bash scripts/test-cloud.sh [tag]
+# Example: bash scripts/test-cloud.sh dev
 
 set -e
 cd "$(dirname "$0")/.."
 
 # CONFIGURATION
-# Replace with your actual GitHub username
 USERNAME="ericrowan"
-IMAGE="ghcr.io/$USERNAME/asahi-atomic:dev"
+TAG="${1:-latest}" # Default to 'latest' if no argument provided
+IMAGE_URL="ghcr.io/$USERNAME/asahi-atomic:$TAG"
 
-echo "☁️  Syncing with Cloud Factory ($IMAGE)..."
+echo "☁️  Syncing with Cloud Factory..."
+echo "   Target: $IMAGE_URL"
 
-# 1. Pull the latest image from GitHub
-podman pull $IMAGE
+# 1. Pull the image
+sudo podman pull "$IMAGE_URL"
 
-# 2. Build the VM Disk using the Cloud Image
-# We export the IMAGE variable so build-vm.sh uses the cloud image, not local
-export IMAGE
+# 2. Build the VM Disk
+echo "💿 Generating Disk Image..."
+export IMAGE="$IMAGE_URL"
 sudo -E bash scripts/build-vm.sh
 
 # 3. Run the VM
