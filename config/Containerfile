@@ -1,18 +1,24 @@
 FROM quay.io/fedora-asahi-remix-atomic-desktops/silverblue:42
 
-# 1. Install VM Bootloader Tools (Keep this, it works)
+# 1. Install Bootloader Tools
 RUN rpm-ostree install \
     grub2-efi-aa64 \
     grub2-efi-aa64-modules \
     grub2-tools \
     shim-aa64 \
+    plymouth-plugin-script \
     && rpm-ostree cleanup -m
 
-# 2. Copy & Run Cortex Modules (THIS IS THE MISSING PIECE)
+# 2. Copy Files (Direct Overlay)
+# This copies config/files/usr -> /usr and config/files/etc -> /etc automatically
+COPY config/files /
+
+# 3. Run Modules
 COPY config/modules /tmp/modules
 RUN chmod +x /tmp/modules/*.sh && \
     /tmp/modules/01-packages.sh && \
     /tmp/modules/02-tweaks.sh
 
-# 3. Final Cleanup
+# 4. Cleanup & User
 RUN rm -rf /tmp/* /var/tmp/*
+RUN echo "root:fedora" | chpasswd
