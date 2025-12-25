@@ -4,7 +4,8 @@ set -e
 # Ensure we are in the project root
 cd "$(dirname "$0")/.."
 
-IMAGE="localhost/asahi-atomic:latest"
+# Allow image override from environment
+IMAGE="${IMAGE:-localhost/asahi-atomic:latest}"
 OUTPUT_DIR="output"
 DISK_IMG="$OUTPUT_DIR/asahi-atomic-vm.img"
 DISK_SIZE="15G"
@@ -12,8 +13,8 @@ DISK_SIZE="15G"
 echo "─── 🏗️  Building VM Image ───"
 
 # 1. Create Disk
-mkdir -p $OUTPUT_DIR
-truncate -s $DISK_SIZE "$DISK_IMG"
+mkdir -p "$OUTPUT_DIR"
+truncate -s "$DISK_SIZE" "$DISK_IMG"
 sfdisk "$DISK_IMG" > /dev/null <<EOF
 label: gpt
 , 500M, U
@@ -28,10 +29,6 @@ function cleanup {
     mountpoint -q /mnt/asahi_vm/boot/efi && umount /mnt/asahi_vm/boot/efi
     mountpoint -q /mnt/asahi_vm && umount /mnt/asahi_vm
     losetup -d "$LOOP" 2>/dev/null || true
-    # Fix ownership so the user can run the VM without sudo
-    if [ -n "$SUDO_USER" ]; then
-        chown $SUDO_USER:$SUDO_USER "$DISK_IMG"
-    fi
     echo "✅ VM Ready: $DISK_IMG"
 }
 trap cleanup EXIT
@@ -47,12 +44,10 @@ mkdir -p /mnt/asahi_vm/boot/efi
 mount "${LOOP}p1" /mnt/asahi_vm/boot/efi
 
 # 5. Install OS & Force GRUB
-echo "🚀 Installing OS (from Root Storage)..."
-# ADDED: -e LANG=C.UTF-8 -e LC_ALL=C.UTF-8 to fix locale path errors
+echo "🚀 Installing OS..."
 podman run --rm --privileged --pid=host --security-opt label=type:unconfined_t \
-    -e LANG=C.UTF-8 -e LC_ALL=C.UTF-8 \
     -v /dev:/dev -v /mnt/asahi_vm:/target \
-    $IMAGE \
+    "$IMAGE" \
     /bin/bash -c "
         bootc install to-filesystem --disable-selinux --skip-finalize /target && \
         echo '🔧 Forcing GRUB...' && \
@@ -77,3 +72,8 @@ cat <<EOF > /mnt/asahi_vm/etc/fstab
 UUID=$ROOT_UUID / btrfs subvol=root 0 0
 UUID=$EFI_UUID /boot/efi vfat defaults 0 2
 EOF
+
+# Fix ownership so user can run the VM
+if [ -n "$SUDO_USER" ]; then
+    chown "$SUDO_USER:$SUDO_USER" "$DISK_IMG"
+fi

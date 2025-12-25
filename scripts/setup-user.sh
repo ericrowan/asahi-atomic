@@ -2,22 +2,25 @@
 # ──────────────────────────────────────────────────────────────────────────────
 #  PROJECT CORTEX: USER HYDRATION
 # ──────────────────────────────────────────────────────────────────────────────
-# Usage: bash scripts/setup-user.sh
-
 set -e
 echo "💧 Hydrating User Space..."
 
 # 1. FLATHUB & APPS
 flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
 
-# Define path to list (Assumes script runs from repo root)
 FLATPAK_LIST="config/flatpaks.txt"
 
 if [ -f "$FLATPAK_LIST" ]; then
     echo "📦 Installing Flatpaks from config..."
-    # Read file, strip comments, install
-    APPS=$(grep -vE '^\s*#|^\s*$' "$FLATPAK_LIST" | tr '\n' ' ')
-    flatpak install -y flathub $APPS
+
+    # Read file into array, skipping comments and empty lines
+    mapfile -t APPS < <(grep -vE '^\s*#|^\s*$' "$FLATPAK_LIST")
+
+    if [ ${#APPS[@]} -gt 0 ]; then
+        flatpak install -y flathub "${APPS[@]}"
+    else
+        echo "⚠️  No apps found in $FLATPAK_LIST"
+    fi
 else
     echo "⚠️  Warning: $FLATPAK_LIST not found. Skipping Flatpaks."
 fi
