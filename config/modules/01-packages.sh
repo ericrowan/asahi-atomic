@@ -1,9 +1,9 @@
 #!/bin/bash
 set -ouex pipefail
 
-echo "📦 Processing System Packages..."
+echo "📦 Installing System Packages..."
 
-# 1. Decrapify
+# 1. Decrapify (Remove stock bloat)
 rpm-ostree override remove \
     firefox firefox-langpacks \
     gnome-tour \
@@ -11,55 +11,33 @@ rpm-ostree override remove \
     yelp \
     gnome-user-docs
 
-# 2. Resilient Package Installer
-# Reads config/packages.txt, checks availability, installs valid ones.
+# 2. Install Core Tools (Resilient Array Method)
+# We read the config file into a Bash Array to satisfy ShellCheck SC2086
 PKG_FILE="/tmp/config/packages.txt"
-LOG_FILE="/tmp/skipped-packages.log"
-INSTALL_LIST=""
 
 if [ -f "$PKG_FILE" ]; then
-    # Read file, strip comments/empty lines
-    CANDIDATES=$(grep -vE '^\s*#|^\s*$' "$PKG_FILE")
+    # Read non-comment lines into the PACKAGES array
+    mapfile -t PACKAGES < <(grep -vE '^\s*#|^\s*$' "$PKG_FILE")
 
-    echo "🔍 Verifying package availability..."
-
-    for pkg in $CANDIDATES; do
-        # Use dnf repoquery to check if package exists in enabled repos
-        if dnf repoquery --quiet --available "$pkg" &>/dev/null; then
-            INSTALL_LIST="$INSTALL_LIST $pkg"
-        else
-            echo "⚠️  Skipping missing package: $pkg"
-            echo "$pkg" >> "$LOG_FILE"
-        fi
-    done
-
-    # Install the valid list
-    if [ -n "$INSTALL_LIST" ]; then
-        echo "⬇️  Installing verified packages..."
-        rpm-ostree install $INSTALL_LIST
+    if [ ${#PACKAGES[@]} -gt 0 ]; then
+        echo "Installing ${#PACKAGES[@]} packages..."
+        # Quoting the array expands to individual arguments safely
+        rpm-ostree install "${PACKAGES[@]}"
     else
-        echo "⚠️  No valid packages found to install."
-    fi
-
-    # Dump log to build output if it exists
-    if [ -f "$LOG_FILE" ]; then
-        echo "--- SKIPPED PACKAGES ---"
-        cat "$LOG_FILE"
-        echo "------------------------"
-        # Optional: Copy log to persistent location if needed
+        echo "⚠️ No packages found in list."
     fi
 else
     echo "❌ Error: packages.txt not found."
     exit 1
 fi
 
-# 3. Manual Binary Installs
-# Starship
+# 3. Install Starship (Manual Binary)
 curl -sS https://starship.rs/install.sh | sh -s -- -y -b /usr/bin
 
-# Gum
+# 4. Install Gum (Manual Binary)
 GUM_VERSION="0.13.0"
 GUM_URL="https://github.com/charmbracelet/gum/releases/download/v${GUM_VERSION}/gum_${GUM_VERSION}_linux_arm64.tar.gz"
+
 cd /tmp
 curl -L -o gum.tar.gz "$GUM_URL"
 tar -xf gum.tar.gz
