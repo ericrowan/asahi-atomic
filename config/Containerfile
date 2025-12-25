@@ -21,4 +21,3 @@ RUN chmod +x /tmp/modules/*.sh && \
 
 # 4. Cleanup & User
 RUN rm -rf /tmp/* /var/tmp/*
-RUN echo "root:fedora" | chpasswd

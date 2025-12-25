@@ -1,0 +1,29 @@
+# --- Core Shell Experience ---
+fish
+starship
+fastfetch
+bat
+eza
+zoxide
+plocate
+
+# --- System Utils ---
+just                  # Command runner (Crucial for Bluefin parity)
+distrobox             # Containers
+tailscale             # VPN
+openssl               # Required for GSConnect
+gnome-tweaks          # UI Config
+sushi                 # Quick Look
+powertop              # Battery monitoring
+htop
+btop
+nvtop                 # GPU monitoring (works on Asahi!)
+
+# --- Connectivity ---
+cifs-utils            # NAS (SMB)
+nfs-utils             # NAS (NFS)
+wireguard-tools       # VPN alternative
+
+# --- Archivists ---
+p7zip
+unrar

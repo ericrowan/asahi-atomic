@@ -1,12 +1,38 @@
-# System
-com.github.tchx84.Flatseal
-com.mattjakeman.ExtensionManager
-org.gnome.World.PikaBackup
+# --- System & Security ---
+com.github.tchx84.Flatseal          # Permissions Manager (MUST HAVE)
+com.mattjakeman.ExtensionManager    # Extension Manager
+org.gnome.World.PikaBackup          # Time Machine (Borg)
+com.bitwarden.desktop               # Password Manager (Open Source)
+# com.1password.1password           # Password Manager (Proprietary Option)
+io.github.flattool.Warehouse        # Flatpak Manager
 
-# Dev
-dev.zed.Zed
-com.raggesilver.BlackBox
+# --- Connectivity ---
+org.signal.Signal                   # Messaging
+com.discordapp.Discord              # Community
+org.gnome.Shell.Extensions.GSConnect # iPhone/Android Sync (Native integration)
 
-# Social
-org.signal.Signal
-com.discordapp.Discord
+# --- Productivity ---
+org.mozilla.firefox                 # Browser
+org.gnome.Evince                    # PDF Preview
+org.gnome.Loupe                     # Image Preview
+org.gnome.Calculator                # Calculator
+org.gnome.TextEditor                # Notepad equivalent
+md.obsidian.Obsidian                # Notes / Second Brain
+
+# --- Creative ---
+com.bitwig.BitwigStudio             # DAW
+org.gimp.GIMP                       # Image Editor
+org.inkscape.Inkscape               # Vector Editor
+org.blender.Blender                 # 3D
+
+# --- Dev ---
+dev.zed.Zed                         # Fast Editor
+com.vscodium.codium                 # VS Code (Open Source)
+com.raggesilver.BlackBox            # Terminal (Aesthetic)
+sw.kovidgoyal.kitty                 # Terminal (Power)
+org.gnome.Boxes                     # Virtual Machines
+
+# --- Media ---
+io.github.celluloid_player.Celluloid # Modern Video Player (mpv frontend)
+com.spotify.Client                  # Music
+de.haeckerfelix.Shortwave           # Radio
