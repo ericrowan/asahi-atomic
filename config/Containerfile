@@ -24,6 +24,3 @@ RUN chmod +x /tmp/config/modules/*.sh && \
 
 # 5. Cleanup
 RUN rm -rf /tmp/* /var/tmp/*
-
-# 6. Unlock Root (For VM debugging)
-RUN echo "root:fedora" | chpasswd

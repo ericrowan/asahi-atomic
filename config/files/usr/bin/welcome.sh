@@ -9,7 +9,7 @@ TEXT="#e2e8f0"      # Slate
 
 clear
 
-# 1. The Branding
+# 1. Branding
 gum style \
 	--border double \
 	--margin "1 2" \
@@ -21,7 +21,7 @@ gum style \
 
 echo ""
 
-# 2. The Instruction
+# 2. Instructions
 gum style --foreground "$TEXT" "Your system is ready. To install apps, Homebrew,"
 gum style --foreground "$TEXT" "and developer tools, run this command:"
 
@@ -34,7 +34,7 @@ gum style \
     "just setup"
 echo ""
 
-# 3. The Interactive Pause
+# 3. Interactive Pause
 # We pause here so they see the message before the window vanishes (if not in a persistent shell)
 gum confirm "Close this window?" && {
     # Disable autostart so this doesn't appear next boot
