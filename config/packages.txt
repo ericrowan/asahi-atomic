@@ -18,6 +18,7 @@ powertop              # Battery monitoring
 htop
 btop
 nvtop                 # GPU monitoring (works on Asahi!)
+mc                    # Midnight Commander file manager
 
 # --- Connectivity ---
 cifs-utils            # NAS (SMB)
