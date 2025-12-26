@@ -1,5 +1,8 @@
 FROM quay.io/fedora-asahi-remix-atomic-desktops/silverblue:42
 
+# Enforce pipefail
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
 # 1. Install VM Bootloader Tools
 RUN rpm-ostree install \
     grub2-efi-aa64 \
@@ -12,15 +15,20 @@ RUN rpm-ostree install \
 # 2. Setup Build Context
 COPY config /tmp/config
 
-# 3. Apply System Files (FIXED)
-# We use 'cp -a src/.' to merge contents into existing system directories
+# 3. Apply System Files (Overlay)
 RUN cp -a /tmp/config/files/usr/. /usr/ && \
     cp -a /tmp/config/files/etc/. /etc/
 
-# 4. Run Modules
+# 4. Install Config Data (THE FIX)
+# We move the lists to a standard system share location
+RUN mkdir -p /usr/share/wavyos && \
+    cp /tmp/config/flatpaks.txt /usr/share/wavyos/ && \
+    cp /tmp/config/distrobox.ini /usr/share/wavyos/
+
+# 5. Run Modules
 RUN chmod +x /tmp/config/modules/*.sh && \
     /tmp/config/modules/01-packages.sh && \
     /tmp/config/modules/02-tweaks.sh
 
-# 5. Cleanup
+# 6. Cleanup
 RUN rm -rf /tmp/* /var/tmp/*

@@ -9,7 +9,7 @@ download-updates-notify=false
 
 # --- 1. SYSTEM INTERFACE ---
 [org.gnome.desktop.interface]
-color-scheme='prefer-light'
+color-scheme='prefer-dark'
 #enable-hot-corners=false
 show-battery-percentage=true
 

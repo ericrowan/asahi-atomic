@@ -9,7 +9,7 @@ TEXT="#e2e8f0"      # Slate
 
 clear
 
-# 1. Branding
+# 1. The Branding
 gum style \
 	--border double \
 	--margin "1 2" \
@@ -21,7 +21,7 @@ gum style \
 
 echo ""
 
-# 2. Instructions
+# 2. The Instruction
 gum style --foreground "$TEXT" "Your system is ready. To install apps, Homebrew,"
 gum style --foreground "$TEXT" "and developer tools, run this command:"
 
@@ -31,16 +31,18 @@ gum style \
     --border rounded \
     --padding "0 2" \
     --border-foreground "$SECONDARY" \
-    "just --justfile /etc/justfile setup"
+    "just setup"
 echo ""
 
-# 3. Interactive Pause
-# We pause here so they see the message before the window vanishes (if not in a persistent shell)
-gum confirm "Close this window?" && {
+# 3. The Interactive Trigger
+if gum confirm "Run setup now?"; then
+    # We use the full binary path to bypass shell aliases
+    /usr/bin/just --justfile /etc/justfile --working-directory $HOME setup
+else
     # Disable autostart so this doesn't appear next boot
     mkdir -p ~/.config/autostart
     echo "[Desktop Entry]" > ~/.config/autostart/welcome.desktop
     echo "Type=Application" >> ~/.config/autostart/welcome.desktop
     echo "Hidden=true" >> ~/.config/autostart/welcome.desktop
     echo "X-GNOME-Autostart-enabled=false" >> ~/.config/autostart/welcome.desktop
-}
+fi

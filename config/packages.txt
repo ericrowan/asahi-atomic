@@ -3,12 +3,16 @@ btop
 cifs-utils
 curl
 distrobox
+eza
 fastfetch
+file
 fish
+gcc
 git
 gnome-tweaks
 htop
 just
+make
 mc
 nfs-utils
 nvtop
@@ -16,6 +20,7 @@ openssl
 p7zip
 plocate
 powertop
+procps-ng
 sushi
 tailscale
 unrar
