@@ -3,8 +3,10 @@ btop
 cifs-utils
 curl
 distrobox
+eza
 fastfetch
 fish
+git
 gnome-tweaks
 htop
 just
@@ -15,6 +17,7 @@ openssl
 p7zip
 plocate
 powertop
+starship
 sushi
 tailscale
 unrar

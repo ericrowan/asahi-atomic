@@ -7,6 +7,7 @@ echo "📦 Installing System Packages..."
 rpm-ostree override remove \
     firefox firefox-langpacks \
     gnome-tour \
+    gnome-software-rpm-ostree \
     yelp
 
 # 2. Install Core Tools (From text file)
