@@ -3,7 +3,7 @@ set -ouex pipefail
 
 echo "📦 Installing System Packages..."
 
-# 1. Decrapify (Remove stock bloat)
+# 1. Decrapify
 rpm-ostree override remove \
     firefox firefox-langpacks \
     gnome-tour \
@@ -11,20 +11,18 @@ rpm-ostree override remove \
     yelp \
     gnome-user-docs
 
-# 2. Install Core Tools (Resilient Array Method)
-# We read the config file into a Bash Array to satisfy ShellCheck SC2086
+# 2. Install Core Tools (Clean Array Method)
 PKG_FILE="/tmp/config/packages.txt"
 
 if [ -f "$PKG_FILE" ]; then
-    # Read non-comment lines into the PACKAGES array
-    mapfile -t PACKAGES < <(grep -vE '^\s*#|^\s*$' "$PKG_FILE")
+    # Read file directly into array (assumes clean list)
+    mapfile -t PACKAGES < "$PKG_FILE"
 
     if [ ${#PACKAGES[@]} -gt 0 ]; then
         echo "Installing ${#PACKAGES[@]} packages..."
-        # Quoting the array expands to individual arguments safely
         rpm-ostree install "${PACKAGES[@]}"
     else
-        echo "⚠️ No packages found in list."
+        echo "⚠️  No packages found in list."
     fi
 else
     echo "❌ Error: packages.txt not found."

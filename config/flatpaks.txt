@@ -1,38 +1,23 @@
-# --- System & Security ---
-com.github.tchx84.Flatseal          # Permissions Manager (MUST HAVE)
-com.mattjakeman.ExtensionManager    # Extension Manager
-org.gnome.World.PikaBackup          # Time Machine (Borg)
-com.bitwarden.desktop               # Password Manager (Open Source)
-# com.1password.1password           # Password Manager (Proprietary Option)
-io.github.kolunmi.Bazaar            # Flatpak Manager
-
-# --- Connectivity ---
-org.signal.Signal                   # Messaging
-com.discordapp.Discord              # Community
-org.gnome.Shell.Extensions.GSConnect # iPhone/Android Sync (Native integration)
-
-# --- Productivity ---
-org.mozilla.firefox                 # Browser
-org.gnome.Evince                    # PDF Preview
-org.gnome.Loupe                     # Image Preview
-org.gnome.Calculator                # Calculator
-org.gnome.TextEditor                # Notepad equivalent
-md.obsidian.Obsidian                # Notes / Second Brain
-
-# --- Creative ---
-com.bitwig.BitwigStudio             # DAW
-org.gimp.GIMP                       # Image Editor
-org.inkscape.Inkscape               # Vector Editor
-org.blender.Blender                 # 3D
-
-# --- Dev ---
-dev.zed.Zed                         # Fast Editor
-com.vscodium.codium                 # VS Code (Open Source)
-com.raggesilver.BlackBox            # Terminal (Aesthetic)
-sw.kovidgoyal.kitty                 # Terminal (Power)
-org.gnome.Boxes                     # Virtual Machines
-
-# --- Media ---
-io.github.celluloid_player.Celluloid # Modern Video Player (mpv frontend)
-com.spotify.Client                  # Music
-de.haeckerfelix.Shortwave           # Radio
+com.github.tchx84.Flatseal
+com.mattjakeman.ExtensionManager
+org.gnome.World.PikaBackup
+io.github.flattool.Warehouse
+org.signal.Signal
+com.discordapp.Discord
+org.gnome.Shell.Extensions.GSConnect
+org.mozilla.firefox
+org.gnome.Evince
+org.gnome.Loupe
+org.gnome.Calculator
+org.gnome.TextEditor
+com.bitwig.BitwigStudio
+org.gimp.GIMP
+org.blender.Blender
+dev.zed.Zed
+com.vscodium.codium
+com.raggesilver.BlackBox
+sw.kovidgoyal.kitty
+org.gnome.Boxes
+io.github.celluloid_player.Celluloid
+com.spotify.Client
+de.haeckerfelix.Shortwave
