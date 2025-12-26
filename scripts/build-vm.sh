@@ -51,7 +51,11 @@ podman run --rm --privileged --pid=host --security-opt label=type:unconfined_t \
     /bin/bash -c "
         bootc install to-filesystem --disable-selinux --skip-finalize /target && \
         echo '🔧 Forcing GRUB...' && \
-        grub2-install --force --target=arm64-efi --efi-directory=/target/boot/efi --boot-directory=/target/boot --removable --recheck /dev/loop0
+        grub2-install --force --target=arm64-efi --efi-directory=/target/boot/efi --boot-directory=/target/boot --removable --recheck /dev/loop0 && \
+        # MANUALLY FIX THE BOOT PATH FOR QEMU
+        mkdir -p /target/boot/efi/EFI/BOOT && \
+        cp /target/boot/efi/EFI/fedora/grubaa64.efi /target/boot/efi/EFI/BOOT/BOOTAA64.EFI && \
+        grub2-mkconfig -o /target/boot/grub2/grub.cfg
     "
 
 # 6. Manual Configs
