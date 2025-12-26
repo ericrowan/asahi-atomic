@@ -1,0 +1,58 @@
+# 🌊 WavyOS Command Center
+# Standardizing maintenance for Apple Silicon.
+
+# List available commands
+default:
+    @just --list
+
+# 🚀 SYSTEM MAINTENANCE
+
+# Update everything (OS, Apps, Brew, Containers)
+update:
+    @echo "🌊 Updating WavyOS System..."
+    sudo bootc upgrade
+    @echo "📦 Updating Flatpaks..."
+    flatpak update -y
+    @echo "🍺 Updating Homebrew..."
+    @if [ -d "/home/linuxbrew/.linuxbrew" ]; then brew update && brew upgrade; fi
+    @echo "🛠️  Updating Distrobox..."
+    distrobox upgrade --all
+    @echo "✨ Update Complete. Reboot if system layers changed."
+
+# Clean up garbage (Old images, unused flatpaks)
+clean:
+    @echo "🧹 Cleaning System..."
+    podman system prune -a -f
+    flatpak uninstall --unused -y
+    rpm-ostree cleanup -m
+    @echo "✨ Sparkle clean."
+
+# 🛠️ UTILITIES
+
+# Re-run the user setup script (Idempotent)
+setup:
+    bash /usr/bin/setup-user.sh
+
+# Force audio fix (if sound gets janky)
+fix-audio:
+    @echo "🔊 Resetting Wireplumber..."
+    systemctl --user restart wireplumber pipewire
+    @echo "✅ Audio stack restarted."
+
+# View system logs (The "Console.app" equivalent)
+logs:
+    gnome-logs
+
+# ⚡️ POWER USER
+
+# Switch to the 'dev' branch (Beta channel)
+switch-dev:
+    sudo bootc switch ghcr.io/ericrowan/asahi-atomic:dev
+
+# Switch to the 'main' branch (Stable channel)
+switch-stable:
+    sudo bootc switch ghcr.io/ericrowan/asahi-atomic:latest
+
+# Pin the current deployment (Prevent auto-deletion)
+pin:
+    sudo ostree admin pin 0
