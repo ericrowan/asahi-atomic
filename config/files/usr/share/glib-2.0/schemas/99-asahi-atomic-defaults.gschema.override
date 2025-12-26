@@ -2,10 +2,15 @@
 #  WavyOS / Asahi Atomic Defaults
 # ──────────────────────────────────────────────────────────────────────────────
 
+# --- 0. SYSTEM CONFIG ---
+[org.gnome.software]
+download-updates=false
+download-updates-notify=false
+
 # --- 1. SYSTEM INTERFACE ---
 [org.gnome.desktop.interface]
-color-scheme='prefer-dark'
-enable-hot-corners=false
+color-scheme='prefer-light'
+#enable-hot-corners=false
 show-battery-percentage=true
 
 # --- 2. INPUT & PERIPHERALS ---
@@ -14,14 +19,14 @@ tap-to-click=true
 natural-scroll=true
 
 # Mac-like Keybinds (Swap Ctrl/Command at OS level)
-[org.gnome.desktop.input-sources]
-xkb-options=['altwin:ctrl_win']
+#[org.gnome.desktop.input-sources]
+#xkb-options=['altwin:ctrl_win']
 
 # --- 3. WINDOW MANAGEMENT ---
 [org.gnome.desktop.wm.preferences]
 # Mac-style buttons on the left (Optional - comment out if you prefer right)
 # button-layout='close,minimize,maximize:'
-button-layout='appmenu:minimize,maximize,close'
+#button-layout='appmenu:minimize,maximize,close'
 
 # --- 4. EXTENSION: DASH TO DOCK ---
 [org.gnome.shell.extensions.dash-to-dock]

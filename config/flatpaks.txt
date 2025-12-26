@@ -4,6 +4,7 @@ com.discordapp.Discord
 com.github.tchx84.Flatseal
 com.mattjakeman.ExtensionManager
 com.raggesilver.BlackBox
+com.ranfdev.DistroShelf
 com.spotify.Client
 com.valvesoftware.Steam
 com.vscodium.codium

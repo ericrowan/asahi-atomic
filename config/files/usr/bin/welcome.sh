@@ -31,7 +31,7 @@ gum style \
     --border rounded \
     --padding "0 2" \
     --border-foreground "$SECONDARY" \
-    "just setup"
+    "just --justfile /etc/justfile setup"
 echo ""
 
 # 3. Interactive Pause

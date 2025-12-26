@@ -1,6 +1,10 @@
 # Feature Ideas
 Features to implement in the Asahi Atomic operating system.
 
+### User Setup (first boot
+- Disable Location Services by default
+- What about Enable Third-Party Repositories? (in the past, enabling this here has crashed the wizard)
+
 ### macOS-like Behavior
 - Dash to Dock w/curated config applied 
 - Blur My Shell w/curated config applied 
@@ -16,6 +20,9 @@ Features to implement in the Asahi Atomic operating system.
 - I have my display scale set to 150% and this works for me
 - Do research: is this the best option for everyone?
 - Display Scaling: Research and implement the best display scaling option for everyone
+(**3-finger drag**)
+- One of my favorite settings in macOS and one I'm not sure why isn't set by default
+- Here's a github repo: https://github.com/lmr97/linux-3-finger-drag
 
 ### Asahi-Atomic Agent (will need new name)
 - Ollama running lightweight model like Qwen or Mistral
