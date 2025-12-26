@@ -45,17 +45,15 @@ mount "${LOOP}p1" /mnt/asahi_vm/boot/efi
 
 # 5. Install OS & Force GRUB
 echo "🚀 Installing OS..."
+# ADDED: -e LANG=C.UTF-8 -e LC_ALL=C.UTF-8 to prevent tar extraction errors
 podman run --rm --privileged --pid=host --security-opt label=type:unconfined_t \
+    -e LANG=C.UTF-8 -e LC_ALL=C.UTF-8 \
     -v /dev:/dev -v /mnt/asahi_vm:/target \
     "$IMAGE" \
     /bin/bash -c "
         bootc install to-filesystem --disable-selinux --skip-finalize /target && \
         echo '🔧 Forcing GRUB...' && \
-        grub2-install --force --target=arm64-efi --efi-directory=/target/boot/efi --boot-directory=/target/boot --removable --recheck /dev/loop0 && \
-        # MANUALLY FIX THE BOOT PATH FOR QEMU
-        mkdir -p /target/boot/efi/EFI/BOOT && \
-        cp /target/boot/efi/EFI/fedora/grubaa64.efi /target/boot/efi/EFI/BOOT/BOOTAA64.EFI && \
-        grub2-mkconfig -o /target/boot/grub2/grub.cfg
+        grub2-install --force --target=arm64-efi --efi-directory=/target/boot/efi --boot-directory=/target/boot --removable --recheck /dev/loop0
     "
 
 # 6. Manual Configs
