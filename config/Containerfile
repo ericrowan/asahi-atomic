@@ -1,8 +1,5 @@
 FROM quay.io/fedora-asahi-remix-atomic-desktops/silverblue:42
 
-# Enforce pipefail for safety (Hadolint requirement)
-SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-
 # 1. Install VM Bootloader Tools
 RUN rpm-ostree install \
     grub2-efi-aa64 \
@@ -15,9 +12,10 @@ RUN rpm-ostree install \
 # 2. Setup Build Context
 COPY config /tmp/config
 
-# 3. Apply System Files (Overlay)
-RUN cp -r /tmp/config/files/usr /usr && \
-    cp -r /tmp/config/files/etc /etc
+# 3. Apply System Files (FIXED)
+# We use 'cp -a src/.' to merge contents into existing system directories
+RUN cp -a /tmp/config/files/usr/. /usr/ && \
+    cp -a /tmp/config/files/etc/. /etc/
 
 # 4. Run Modules
 RUN chmod +x /tmp/config/modules/*.sh && \
