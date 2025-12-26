@@ -2,8 +2,10 @@
 # ──────────────────────────────────────────────────────────────────────────────
 #  PROJECT CORTEX: USER HYDRATION
 # ──────────────────────────────────────────────────────────────────────────────
-set -e
+set -ex
 echo "💧 Hydrating User Space..."
+
+CONFIG_DIR="/usr/share/asahi-atomic"
 
 # 1. PREPARE HOMEBREW
 # We create the directory as root, then give it to the user.
@@ -34,11 +36,12 @@ fi
 flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
 
 # Point to the system-installed list
-FLATPAK_LIST="/usr/share/asahi-atomic/flatpaks.txt"
+FLATPAK_LIST="$CONFIG_DIR/flatpaks.txt"
 
 if [ -f "$FLATPAK_LIST" ]; then
     echo "📦 Installing Flatpaks from system config..."
-    mapfile -t APPS < <(grep -vE '^\s*#|^\s*$' "$FLATPAK_LIST")
+    # Fix: prevent grep failure from exiting the script (return true if no matches)
+    mapfile -t APPS < <(grep -vE '^\s*#|^\s*$' "$FLATPAK_LIST" || true)
 
     if [ ${#APPS[@]} -gt 0 ]; then
         flatpak install -y flathub "${APPS[@]}"
@@ -48,7 +51,7 @@ else
 fi
 
 # 3. DISTROBOX
-DISTROBOX_INI="/usr/share/asahi-atomic/distrobox.ini"
+DISTROBOX_INI="$CONFIG_DIR/distrobox.ini"
 
 if [ -f "$DISTROBOX_INI" ]; then
     echo "📦 Assembling Distroboxes..."
