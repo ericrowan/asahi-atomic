@@ -1,58 +1,46 @@
 #!/bin/bash
-# Welcome Wizard (TUI)
-# Runs on first login.
+# 🌊 WavyOS Welcome
+# The "First Breath" experience.
 
 # Colors
-PRIMARY="#06b6d4" # Cyan
+PRIMARY="#06b6d4"   # Cyan
 SECONDARY="#8b5cf6" # Violet
+TEXT="#e2e8f0"      # Slate
 
 clear
 
-# 1. Branding / Intro
+# 1. The Branding
 gum style \
 	--border double \
 	--margin "1 2" \
 	--padding "2 4" \
 	--border-foreground "$PRIMARY" \
-	"👋  Welcome to Atomic" \
-	"   Your system is ready."
+	--foreground "$PRIMARY" \
+	"🌊  Welcome to WavyOS" \
+	"   The atomic, creative bridge."
 
 echo ""
-gum style --foreground "$SECONDARY" "Let's set up your workspace."
+
+# 2. The Instruction
+gum style --foreground "$TEXT" "Your system is ready. To install apps, Homebrew,"
+gum style --foreground "$TEXT" "and developer tools, run this command:"
+
+echo ""
+gum style \
+    --foreground "$SECONDARY" \
+    --border rounded \
+    --padding "0 2" \
+    --border-foreground "$SECONDARY" \
+    "just setup"
 echo ""
 
-# 2. Keybindings
-gum style --foreground "$PRIMARY" "⌨️  Keyboard Layout"
-if gum confirm "Enable macOS-style keybinds (Cmd=Ctrl)?"; then
-    gsettings set org.gnome.desktop.input-sources xkb-options "['altwin:ctrl_win']"
-    gum style --foreground "$GREEN" "✓ Keys swapped."
-else
-    echo "Skipping keybinds."
-fi
-
-# 3. User Setup Script Handoff
-echo ""
-gum style --foreground "$PRIMARY" "📦 Application Setup"
-echo "We can run the hydration script to install Apps and Homebrew."
-
-if gum confirm "Run setup-user.sh now?"; then
-    # We assume the user has cloned the repo or we curl it.
-    # For the VM test, we will check if the file exists in the repo path.
-    SETUP_SCRIPT="$HOME/asahi-atomic/scripts/setup-user.sh"
-
-    if [ -f "$SETUP_SCRIPT" ]; then
-        bash "$SETUP_SCRIPT"
-    else
-        # Fallback if repo isn't cloned yet
-        gum style --foreground "red" "❌ Setup script not found at $SETUP_SCRIPT"
-        echo "Please clone the repository to run the full setup."
-    fi
-fi
-
-# 4. Cleanup
-echo ""
-gum style --border normal --border-foreground "$PRIMARY" "✨ Complete. You may close this window."
-
-# Disable this script from running again
-mkdir -p ~/.config/autostart
-echo "X-GNOME-Autostart-enabled=false" >> ~/.config/autostart/welcome.desktop
+# 3. The Interactive Pause
+# We pause here so they see the message before the window vanishes (if not in a persistent shell)
+gum confirm "Close this window?" && {
+    # Disable autostart so this doesn't appear next boot
+    mkdir -p ~/.config/autostart
+    echo "[Desktop Entry]" > ~/.config/autostart/welcome.desktop
+    echo "Type=Application" >> ~/.config/autostart/welcome.desktop
+    echo "Hidden=true" >> ~/.config/autostart/welcome.desktop
+    echo "X-GNOME-Autostart-enabled=false" >> ~/.config/autostart/welcome.desktop
+}
