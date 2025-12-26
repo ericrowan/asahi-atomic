@@ -6,6 +6,14 @@
 # Example: bash scripts/test-cloud.sh dev
 
 set -e
+
+# Guard: Ensure we are running on the Host
+if [ -f /run/.containerenv ]; then
+echo "❌ Error: This script controls the Hypervisor and Disk Images."
+echo "Please run 'just test' from your HOST terminal, not inside a Distrobox."
+exit 1
+fi
+
 cd "$(dirname "$0")/.."
 
 # CONFIGURATION

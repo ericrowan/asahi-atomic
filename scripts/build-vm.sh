@@ -56,6 +56,10 @@ podman run --rm --privileged --pid=host --security-opt label=type:unconfined_t \
         grub2-install --force --target=arm64-efi --efi-directory=/target/boot/efi --boot-directory=/target/boot --removable --recheck /dev/loop0
     "
 
+# --- FIX: Ensure disk is Writable before config ---
+echo "🔧 Remounting Read-Write..."
+mount -o remount,rw /mnt/asahi_vm || true
+
 # 6. Manual Configs
 mkdir -p /mnt/asahi_vm/boot/grub2 /mnt/asahi_vm/etc
 ROOT_UUID=$(blkid -s UUID -o value "${LOOP}p2")
