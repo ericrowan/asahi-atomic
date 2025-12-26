@@ -5,6 +5,14 @@
 default:
     @just --list
 
+# 🚀 SETUP & HYDRATION
+
+# Run the full "Day 1" setup (Apps + Brew + Dev)
+# We use the absolute path to ensure we find the script we baked into the image
+setup:
+    @echo "🌊 Initializing WavyOS Environment..."
+    @/usr/bin/setup-user.sh
+
 # 🚀 SYSTEM MAINTENANCE
 
 # Update everything (OS, Apps, Brew, Containers)
@@ -14,7 +22,7 @@ update:
     @echo "📦 Updating Flatpaks..."
     flatpak update -y
     @echo "🍺 Updating Homebrew..."
-    @if [ -d "/home/linuxbrew/.linuxbrew" ]; then brew update && brew upgrade; fi
+    @if [ -d "/home/linuxbrew/.linuxbrew" ]; then eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)" && brew update && brew upgrade; fi
     @echo "🛠️  Updating Distrobox..."
     distrobox upgrade --all
     @echo "✨ Update Complete. Reboot if system layers changed."
@@ -29,17 +37,13 @@ clean:
 
 # 🛠️ UTILITIES
 
-# Re-run the user setup script (Idempotent)
-setup:
-    bash /usr/bin/setup-user.sh
-
 # Force audio fix (if sound gets janky)
 fix-audio:
     @echo "🔊 Resetting Wireplumber..."
     systemctl --user restart wireplumber pipewire
     @echo "✅ Audio stack restarted."
 
-# View system logs (The "Console.app" equivalent)
+# View system logs
 logs:
     gnome-logs
 
@@ -47,10 +51,12 @@ logs:
 
 # Switch to the 'dev' branch (Beta channel)
 switch-dev:
+    @echo "⚠️  Switching to Unstable/Dev Channel..."
     sudo bootc switch ghcr.io/ericrowan/asahi-atomic:dev
 
 # Switch to the 'main' branch (Stable channel)
 switch-stable:
+    @echo "🛡️  Switching to Stable Channel..."
     sudo bootc switch ghcr.io/ericrowan/asahi-atomic:latest
 
 # Pin the current deployment (Prevent auto-deletion)
