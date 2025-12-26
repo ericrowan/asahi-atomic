@@ -4,7 +4,7 @@ com.mattjakeman.ExtensionManager    # Extension Manager
 org.gnome.World.PikaBackup          # Time Machine (Borg)
 com.bitwarden.desktop               # Password Manager (Open Source)
 # com.1password.1password           # Password Manager (Proprietary Option)
-io.github.flattool.Warehouse        # Flatpak Manager
+io.github.kolunmi.Bazaar            # Flatpak Manager
 
 # --- Connectivity ---
 org.signal.Signal                   # Messaging
