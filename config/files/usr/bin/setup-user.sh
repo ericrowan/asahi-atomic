@@ -5,42 +5,55 @@
 set -e
 echo "💧 Hydrating User Space..."
 
-# 1. FLATHUB & APPS
+# 1. PREPARE HOMEBREW
+# We create the directory as root, then give it to the user.
+if [ ! -d "/home/linuxbrew/.linuxbrew" ]; then
+    echo "🍺 Preparing Homebrew Directory..."
+
+    # Create directory (requires sudo)
+    sudo mkdir -p /var/home/linuxbrew/.linuxbrew
+
+    # Fix ownership
+    sudo chown -R "$(whoami):$(whoami)" /var/home/linuxbrew/.linuxbrew
+
+    # Symlink if needed (Standard on Silverblue)
+    if [ ! -L "/home/linuxbrew" ]; then
+        sudo ln -sf /var/home/linuxbrew /home/linuxbrew
+    fi
+
+    echo "   Installing Homebrew..."
+    # Run installer as user
+    NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+    # Configure Fish
+    mkdir -p ~/.config/fish
+    echo 'eval (/home/linuxbrew/.linuxbrew/bin/brew shellenv)' >> ~/.config/fish/config.fish
+fi
+
+# 2. FLATHUB & APPS
 flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
 
-FLATPAK_LIST="config/flatpaks.txt"
+# Point to the system-installed list
+FLATPAK_LIST="/usr/share/asahi-atomic/flatpaks.txt"
 
 if [ -f "$FLATPAK_LIST" ]; then
-    echo "📦 Installing Flatpaks from config..."
-
-    # Read file into array, skipping comments and empty lines
+    echo "📦 Installing Flatpaks from system config..."
     mapfile -t APPS < <(grep -vE '^\s*#|^\s*$' "$FLATPAK_LIST")
 
     if [ ${#APPS[@]} -gt 0 ]; then
         flatpak install -y flathub "${APPS[@]}"
-    else
-        echo "⚠️  No apps found in $FLATPAK_LIST"
     fi
 else
     echo "⚠️  Warning: $FLATPAK_LIST not found. Skipping Flatpaks."
 fi
 
-# 2. HOMEBREW
-if [ ! -d "/home/linuxbrew/.linuxbrew" ]; then
-    echo "🍺 Installing Homebrew..."
-    CI=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-
-    mkdir -p ~/.config/fish
-    echo 'eval (/home/linuxbrew/.linuxbrew/bin/brew shellenv)' >> ~/.config/fish/config.fish
-fi
-
 # 3. DISTROBOX
-if [ -f "config/distrobox.ini" ]; then
+DISTROBOX_INI="/usr/share/asahi-atomic/distrobox.ini"
+
+if [ -f "$DISTROBOX_INI" ]; then
     echo "📦 Assembling Distroboxes..."
     if command -v distrobox &> /dev/null; then
-        distrobox assemble create --file config/distrobox.ini
-    else
-        echo "⚠️  Distrobox not found on host. Skipping."
+        distrobox assemble create --file "$DISTROBOX_INI"
     fi
 fi
 
