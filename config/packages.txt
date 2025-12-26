@@ -1,8 +1,6 @@
 fish
-starship
 fastfetch
 bat
-eza
 zoxide
 just
 distrobox
