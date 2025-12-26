@@ -1,17 +1,25 @@
-# Local Development Justfile
+# 🛠️ WavyOS Build Center
 
-# 1. Build & Push
+default:
+    @just --list
+
+# 1. Git Workflow
 push msg="update":
     bash scripts/lint.sh
     git add .
-    git commit -m "{{msg}}"
+    git commit -m "{{ msg }}"
     git push
 
-# 2. Test Cloud (UPDATED FILENAME)
+# 2. Testing
 test tag="dev":
-    bash scripts/test.sh {{tag}}
+    bash scripts/test.sh {{ tag }}
 
-# 3. Nuke & Test (UPDATED FILENAME)
 test-clean tag="dev":
     podman system reset --force
-    bash scripts/test.sh {{tag}}
+    bash scripts/test.sh {{ tag }}
+
+# 3. Development
+
+# Enters the dev box defined in YOUR current system
+dev:
+    distrobox enter dev

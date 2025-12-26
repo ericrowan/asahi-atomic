@@ -6,12 +6,18 @@ default:
     @just --list
 
 # 🚀 SETUP & HYDRATION
-
 # Run the full "Day 1" setup (Apps + Brew + Dev)
+
 # We use the absolute path to ensure we find the script we baked into the image
 setup:
     @echo "🌊 Initializing WavyOS Environment..."
     @/usr/bin/setup-user.sh
+
+# Enter the developer environment (Distrobox)
+
+# This is the shortcut for "distrobox enter dev"
+dev:
+    distrobox enter dev
 
 # 🚀 SYSTEM MAINTENANCE
 
@@ -43,7 +49,7 @@ fix-audio:
     systemctl --user restart wireplumber pipewire
     @echo "✅ Audio stack restarted."
 
-# View system logs
+# View system logs (The "Console.app" equivalent)
 logs:
     gnome-logs
 
