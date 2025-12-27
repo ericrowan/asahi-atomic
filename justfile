@@ -38,7 +38,7 @@ watch:
 # Commit and Push (and watch build)
 push msg="update": lint
     git add .
-    git commit -m "{{ msg }}"
+    git commit -m "{{ msg }}" || echo "⚠️ Nothing to commit, proceeding to push..."
     git push
     just watch
 
