@@ -12,9 +12,9 @@ default:
 # 1. DEVELOPMENT WORKFLOW
 # -----------------------------------------------------------------------------
 
-# Build container locally
+# Build container locally (Run as Root to ensure VM builder can see image)
 build:
-    podman build \
+    sudo podman build \
         --platform linux/arm64 \
         -f config/Containerfile \
         -t localhost/asahi-atomic:latest \
@@ -44,15 +44,15 @@ dev:
 # 2. TESTING & VM
 # -----------------------------------------------------------------------------
 
-# Test locally (Build VM)
+# Test locally (Build fresh image, then boots VM)
 test tag="latest": build
     @echo "🧪 Testing Tag: {{ tag }}"
     just build-vm "localhost/asahi-atomic:{{ tag }}"
     just run-vm
 
-# Clean test environment
+# Clean test environment and re-test
 test-clean tag="dev":
-    podman system reset --force
+    sudo podman system reset --force
     just test {{ tag }}
 
 # [Internal] Build the VM Image
