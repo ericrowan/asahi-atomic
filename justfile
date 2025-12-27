@@ -30,33 +30,43 @@ lint:
     @find config/modules -name "*.sh" -print0 | xargs -0 shellcheck -x
     @echo "✅ Scripts passed."
 
-# Commit and Push (and watch the build)
+# Watch the latest GitHub Action run (Requires gh cli)
+watch:
+    @echo "👀 Watching build status..."
+    gh run watch
+
+# Commit and Push (and watch build)
 push msg="update": lint
     git add .
     git commit -m "{{ msg }}"
     git push
-    @echo "👀 Watching build..."
     just watch
 
-# Enter dev environment
-dev:
-    distrobox enter dev
+# 🧠 AI ASSISTANT
+
+# Uses 'gemini' from Homebrew on Host
+ask prompt:
+    @echo "🤖 Asking Gemini..."
+    @cat .ai/PROJECT_CONTEXT.md | gemini chat "CONTEXT: You are the Project Manager for WavyOS. Use the provided context to answer. \n\n QUESTION: {{ prompt }}"
 
 # -----------------------------------------------------------------------------
 # 2. TESTING & VM
 # -----------------------------------------------------------------------------
 
-# Test Cloud Image (Default)
-test tag="latest":
-    @echo "☁️  Pulling Cloud Image: {{ tag }}"
-    sudo podman pull "ghcr.io/ericrowan/asahi-atomic:{{ tag }}"
-    just build-vm "ghcr.io/ericrowan/asahi-atomic:{{ tag }}"
+# Enter dev environment
+dev:
+    distrobox enter dev
+
+# Test locally (Builds fresh image, then boots VM)
+test tag="latest": build
+    @echo "🧪 Testing Tag: {{ tag }}"
+    just build-vm "localhost/asahi-atomic:{{ tag }}"
     just run-vm
 
-# Test Local Build (Optional override)
-test-local: build
-    just build-vm "localhost/asahi-atomic:latest"
-    just run-vm
+# Clean test environment and re-test
+test-clean tag="dev":
+    sudo podman system reset --force
+    just test {{ tag }}
 
 # [Internal] Build the VM Image
 build-vm image:
@@ -105,6 +115,7 @@ build-vm image:
     mount "${LOOP}p1" /mnt/asahi_vm/boot/efi
 
     echo "🚀 Installing OS..."
+    # ADDED: --pull=never to ensure we use the local image we just built
     podman run --rm --privileged --pid=host --security-opt label=type:unconfined_t \
         -e LANG=C.UTF-8 -e LC_ALL=C.UTF-8 \
         -v /dev:/dev -v /mnt/asahi_vm:/target \
