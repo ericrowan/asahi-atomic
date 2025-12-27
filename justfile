@@ -30,11 +30,13 @@ lint:
     @find config/modules -name "*.sh" -print0 | xargs -0 shellcheck -x
     @echo "✅ Scripts passed."
 
-# Commit and Push
+# Commit and Push (and watch the build)
 push msg="update": lint
     git add .
     git commit -m "{{ msg }}"
     git push
+    @echo "👀 Watching build..."
+    just watch
 
 # Enter dev environment
 dev:

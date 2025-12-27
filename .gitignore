@@ -3,3 +3,5 @@ output/
 .DS_Store
 *.log
 tmp/
+.ai/logs/
+.ai/tmp/
