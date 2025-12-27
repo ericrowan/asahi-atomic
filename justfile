@@ -34,7 +34,7 @@ lint:
 watch:
     @echo "👀 Waiting for GitHub to start build..."
     @sleep 5
-    gh run watch --workflow "Build WavyOS" || echo "⚠️  Build hasn't started yet."
+    gh run watch || echo "⚠️  Build hasn't started yet. Check 'gh run list'."
 
 # Commit and Push (and watch build)
 push msg="update": lint
