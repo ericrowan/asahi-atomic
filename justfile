@@ -42,6 +42,8 @@ push msg="update": lint
     git commit -m "{{ msg }}" || echo "⚠️ Nothing to commit, proceeding to push..."
     git push
     just watch
+    @echo "✅ Build Complete. Launching Test..."
+    just test
 
 # 🧠 AI ASSISTANT
 
