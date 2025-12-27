@@ -56,3 +56,13 @@ EOF
 echo "✅ Install Complete. Target UUID: $UUID"
 echo "👉 You may need to update your main GRUB config to point to this UUID."
 umount -R "$MOUNT_DIR"
+
+# --- BRANDING: Rename Boot Entry ---
+echo "🎨 Branding Boot Menu..."
+# Search for the BLS config file and swap names
+# We use 'chroot' or direct modification if the path is accessible
+find "$MOUNT_DIR/boot/loader/entries" -name "*.conf" -exec sed -i 's/Silverblue/Asahi Atomic/g' {} +
+find "$MOUNT_DIR/boot/loader/entries" -name "*.conf" -exec sed -i 's/Fedora Linux/Asahi Atomic/g' {} +
+
+echo "✅ Install Complete. Target UUID: $UUID"
+# ... existing code ...

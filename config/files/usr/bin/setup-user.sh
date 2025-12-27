@@ -2,62 +2,67 @@
 # ──────────────────────────────────────────────────────────────────────────────
 #  PROJECT CORTEX: USER HYDRATION
 # ──────────────────────────────────────────────────────────────────────────────
-set -ex
+set -e
 echo "💧 Hydrating User Space..."
 
+# Define System Paths
 CONFIG_DIR="/usr/share/asahi-atomic"
+FLATPAK_LIST="$CONFIG_DIR/flatpaks.txt"
+DISTROBOX_INI="$CONFIG_DIR/distrobox.ini"
 
 # 1. PREPARE HOMEBREW
-# We create the directory as root, then give it to the user.
 if [ ! -d "/home/linuxbrew/.linuxbrew" ]; then
-    echo "🍺 Preparing Homebrew Directory..."
-
-    # Create directory (requires sudo)
+    echo "🍺 Preparing Homebrew..."
     sudo mkdir -p /var/home/linuxbrew/.linuxbrew
-
-    # Fix ownership
     sudo chown -R "$(whoami):$(whoami)" /var/home/linuxbrew/.linuxbrew
-
-    # Symlink if needed (Standard on Silverblue)
-    if [ ! -L "/home/linuxbrew" ]; then
-        sudo ln -sf /var/home/linuxbrew /home/linuxbrew
-    fi
+    if [ ! -L "/home/linuxbrew" ]; then sudo ln -sf /var/home/linuxbrew /home/linuxbrew; fi
 
     echo "   Installing Homebrew..."
-    # Run installer as user
     NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
-    # Configure Fish
+    # Configure Fish path (Optimistic)
     mkdir -p ~/.config/fish
     echo 'eval (/home/linuxbrew/.linuxbrew/bin/brew shellenv)' >> ~/.config/fish/config.fish
 fi
 
-# 2. FLATHUB & APPS
+# 2. INSTALL CLI TOOLS (Brew)
+echo "🍺 Installing CLI Power Tools..."
+eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+
+# Alphabetized List
+brew install \
+    bat \
+    eza \
+    fastfetch \
+    fish \
+    fzf \
+    gh \
+    gum \
+    lazygit \
+    ripgrep \
+    starship \
+    zoxide
+
+# 3. CONFIGURE SHELL (Post-Brew)
+# Since Fish is now installed via Brew, add it to /etc/shells and chsh
+if ! grep -q "$(which fish)" /etc/shells; then
+    echo "🐟 Adding Fish to /etc/shells..."
+    command -v fish | sudo tee -a /etc/shells
+fi
+# Note: We can't script chsh without password prompt, user must do it manually or via Gum prompt later
+
+# 4. FLATHUB & APPS
 flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
-
-# Point to the system-installed list
-FLATPAK_LIST="$CONFIG_DIR/flatpaks.txt"
-
 if [ -f "$FLATPAK_LIST" ]; then
-    echo "📦 Installing Flatpaks from system config..."
-    # Fix: prevent grep failure from exiting the script (return true if no matches)
-    mapfile -t APPS < <(grep -vE '^\s*#|^\s*$' "$FLATPAK_LIST" || true)
-
-    if [ ${#APPS[@]} -gt 0 ]; then
-        flatpak install -y flathub "${APPS[@]}"
-    fi
-else
-    echo "⚠️  Warning: $FLATPAK_LIST not found. Skipping Flatpaks."
+    echo "📦 Installing Flatpaks..."
+    mapfile -t APPS < <(grep -vE '^\s*#|^\s*$' "$FLATPAK_LIST")
+    if [ ${#APPS[@]} -gt 0 ]; then flatpak install -y flathub "${APPS[@]}"; fi
 fi
 
-# 3. DISTROBOX
-DISTROBOX_INI="$CONFIG_DIR/distrobox.ini"
-
+# 5. DISTROBOX
 if [ -f "$DISTROBOX_INI" ]; then
     echo "📦 Assembling Distroboxes..."
-    if command -v distrobox &> /dev/null; then
-        distrobox assemble create --file "$DISTROBOX_INI"
-    fi
+    if command -v distrobox &> /dev/null; then distrobox assemble create --file "$DISTROBOX_INI"; fi
 fi
 
 echo "✨ User Space Ready."
