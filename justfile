@@ -1,8 +1,8 @@
 # 🌊 WavyOS Command Center
-
 # -----------------------------------------------------------------------------
 # GLOBAL SETTINGS
 # -----------------------------------------------------------------------------
+
 set shell := ["bash", "-c"]
 
 default:
@@ -44,22 +44,23 @@ dev:
 # 2. TESTING & VM
 # -----------------------------------------------------------------------------
 
-# Test locally (Build fresh image, then boots VM)
-test tag="latest": build
-    @echo "🧪 Testing Tag: {{ tag }}"
-    just build-vm "localhost/asahi-atomic:{{ tag }}"
+# Test Cloud Image (Default)
+test tag="latest":
+    @echo "☁️  Pulling Cloud Image: {{ tag }}"
+    sudo podman pull "ghcr.io/ericrowan/asahi-atomic:{{ tag }}"
+    just build-vm "ghcr.io/ericrowan/asahi-atomic:{{ tag }}"
     just run-vm
 
-# Clean test environment and re-test
-test-clean tag="dev":
-    sudo podman system reset --force
-    just test {{ tag }}
+# Test Local Build (Optional override)
+test-local: build
+    just build-vm "localhost/asahi-atomic:latest"
+    just run-vm
 
 # [Internal] Build the VM Image
 build-vm image:
     #!/bin/bash
     set -ex
-    
+
     # Ensure root privileges
     if [ "$EUID" -ne 0 ]; then
         echo "⚠️  This recipe requires root privileges for loopback mounting."
@@ -70,20 +71,20 @@ build-vm image:
     OUTPUT_DIR="output"
     DISK_IMG="$OUTPUT_DIR/asahi-atomic-vm.img"
     DISK_SIZE="15G"
-    
+
     echo "─── 🏗️  Building VM Image ($IMAGE) ───"
     mkdir -p "$OUTPUT_DIR"
     truncate -s "$DISK_SIZE" "$DISK_IMG"
-    
+
     # Partitioning
     sfdisk "$DISK_IMG" > /dev/null <<EOF
     label: gpt
     , 500M, U
     , , L
     EOF
-    
+
     LOOP=$(losetup -P --find --show "$DISK_IMG")
-    
+
     # Robust Cleanup Trap
     function cleanup {
         echo "🧹 Cleanup..."
@@ -92,15 +93,15 @@ build-vm image:
         losetup -d "$LOOP" 2>/dev/null || true
     }
     trap cleanup EXIT
-    
+
     mkfs.vfat "${LOOP}p1" > /dev/null
     mkfs.btrfs -f "${LOOP}p2" > /dev/null
-    
+
     mkdir -p /mnt/asahi_vm
     mount "${LOOP}p2" /mnt/asahi_vm
     mkdir -p /mnt/asahi_vm/boot/efi
     mount "${LOOP}p1" /mnt/asahi_vm/boot/efi
-    
+
     echo "🚀 Installing OS..."
     podman run --rm --privileged --pid=host --security-opt label=type:unconfined_t \
         -e LANG=C.UTF-8 -e LC_ALL=C.UTF-8 \
@@ -110,22 +111,22 @@ build-vm image:
             bootc install to-filesystem --disable-selinux --skip-finalize /target && \
             grub2-install --force --target=arm64-efi --efi-directory=/target/boot/efi --boot-directory=/target/boot --removable --recheck /dev/loop0
         "
-    
+
     mount -o remount,rw /mnt/asahi_vm || true
-    
+
     # Configs
     mkdir -p /mnt/asahi_vm/boot/grub2 /mnt/asahi_vm/etc
     ROOT_UUID=$(blkid -s UUID -o value "${LOOP}p2")
     EFI_UUID=$(blkid -s UUID -o value "${LOOP}p1")
-    
+
     echo "search --no-floppy --fs-uuid --set=root $ROOT_UUID" > /mnt/asahi_vm/boot/grub2/grub.cfg
     echo "set prefix=(\$root)/boot/grub2" >> /mnt/asahi_vm/boot/grub2/grub.cfg
     echo "insmod blscfg" >> /mnt/asahi_vm/boot/grub2/grub.cfg
     echo "blscfg" >> /mnt/asahi_vm/boot/grub2/grub.cfg
-    
+
     echo "UUID=$ROOT_UUID / btrfs subvol=root 0 0" > /mnt/asahi_vm/etc/fstab
     echo "UUID=$EFI_UUID /boot/efi vfat defaults 0 2" >> /mnt/asahi_vm/etc/fstab
-    
+
     # Ownership fix for the user who called sudo
     if [ -n "$SUDO_USER" ]; then chown "$SUDO_USER:$SUDO_USER" "$DISK_IMG"; fi
     echo "✅ VM Ready."
@@ -136,10 +137,10 @@ run-vm:
     set -e
     DISK_IMG="output/asahi-atomic-vm.img"
     [ ! -f "$DISK_IMG" ] && echo "❌ Disk not found" && exit 1
-    
+
     SUDO=""
     [ ! -w /dev/kvm ] && SUDO="sudo"
-    
+
     echo "🚀 Booting VM..."
     $SUDO qemu-system-aarch64 \
         -M virt,accel=kvm -m 8G -smp 6 -cpu host \

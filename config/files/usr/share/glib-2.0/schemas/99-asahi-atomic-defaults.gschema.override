@@ -6,6 +6,7 @@
 [org.gnome.software]
 download-updates=false
 download-updates-notify=false
+show-upgrade-prerelease=false
 
 # --- 1. SYSTEM INTERFACE ---
 [org.gnome.desktop.interface]
