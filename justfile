@@ -32,8 +32,9 @@ lint:
 
 # Watch the latest GitHub Action run (Requires gh cli)
 watch:
-    @echo "👀 Watching build status..."
-    gh run watch
+    @echo "👀 Waiting for GitHub to start build..."
+    @sleep 5
+    gh run watch || echo "⚠️  Build hasn't started yet. Check 'gh run list'."
 
 # Commit and Push (and watch build)
 push msg="update": lint

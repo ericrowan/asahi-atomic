@@ -5,3 +5,5 @@ grub2-efi-aa64-modules
 grub2-tools
 shim-aa64
 plymouth-plugin-script
+asahi-audio
+speakersafetyd
