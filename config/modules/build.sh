@@ -57,6 +57,35 @@ rpm-ostree override remove "${REMOVE_PKGS[@]}" \
 
 echo "⚙️  Applying System Tweaks..."
 
+# --- AUDIO FIXES (Baked into OS) ---
+echo "🔊 Configuring Audio Defaults..."
+
+# 1. WirePlumber: Disable Suspend (Fixes "Pop" and 100% Volume bug)
+# We place this in /usr/share/wireplumber so it applies to all users
+mkdir -p /usr/share/wireplumber/main.lua.d
+cat <<EOF > /usr/share/wireplumber/main.lua.d/51-disable-suspend.lua
+table.insert (default_access.rules, {
+  matches = {
+    {
+      { "node.name", "matches", "alsa_output.*" }
+    }
+  },
+  apply_properties = {
+    ["session.suspend-timeout-seconds"] = 0
+  },
+})
+EOF
+
+# 2. PipeWire: Force High Quantum (Fixes Firefox Crackling)
+# We place this in /etc/pipewire so it overrides defaults
+mkdir -p /etc/pipewire/pipewire.conf.d
+cat <<EOF > /etc/pipewire/pipewire.conf.d/99-quantum-fix.conf
+context.properties = {
+    default.clock.min-quantum = 1024
+    default.clock.max-quantum = 2048
+}
+EOF
+
 # Enable Services
 # systemctl enable tailscaled
 systemctl enable podman.socket
