@@ -2,63 +2,59 @@
 # ──────────────────────────────────────────────────────────────────────────────
 #  PROJECT CORTEX: USER HYDRATION
 # ──────────────────────────────────────────────────────────────────────────────
-set -e
+set -ex
 echo "💧 Hydrating User Space..."
 
-# Define System Paths (Absolute)
 CONFIG_DIR="/usr/share/asahi-atomic"
-FLATPAK_LIST="$CONFIG_DIR/flatpaks.txt"
-DISTROBOX_INI="$CONFIG_DIR/distrobox.ini"
 
 # 1. PREPARE HOMEBREW
-# We split creation and ownership to ensure permissions are always fixed.
-echo "🍺 Checking Homebrew Prerequisites..."
+# We create the directory as root, then give it to the user.
+if [ ! -d "/home/linuxbrew/.linuxbrew" ]; then
+    echo "🍺 Preparing Homebrew Directory..."
 
-# Ensure the directory structure exists
-if [ ! -d "/var/home/linuxbrew/.linuxbrew" ]; then
-    echo "   Creating directory..."
+    # Create directory (requires sudo)
     sudo mkdir -p /var/home/linuxbrew/.linuxbrew
-fi
 
-# Symlink /home/linuxbrew -> /var/home/linuxbrew (Silverblue Requirement)
-if [ ! -L "/home/linuxbrew" ]; then
-    echo "   Linking /home/linuxbrew..."
-    sudo ln -sf /var/home/linuxbrew /home/linuxbrew
-fi
+    # Fix ownership
+    sudo chown -R "$(whoami):$(whoami)" /var/home/linuxbrew/.linuxbrew
 
-# ALWAYS fix ownership to the current user (Fixes the "Insufficient permissions" error)
-echo "   Fixing permissions..."
-sudo chown -R "$(whoami):$(whoami)" /var/home/linuxbrew
+    # Symlink if needed (Standard on Silverblue)
+    if [ ! -L "/home/linuxbrew" ]; then
+        sudo ln -sf /var/home/linuxbrew /home/linuxbrew
+    fi
 
-# Install Brew if binary is missing
-if [ ! -f "/home/linuxbrew/.linuxbrew/bin/brew" ]; then
-    echo "   Running Installer..."
+    echo "   Installing Homebrew..."
+    # Run installer as user
     NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
-    # Configure Fish path
+    # Configure Fish
     mkdir -p ~/.config/fish
     echo 'eval (/home/linuxbrew/.linuxbrew/bin/brew shellenv)' >> ~/.config/fish/config.fish
-else
-    echo "✅ Homebrew already installed."
 fi
 
 # 2. FLATHUB & APPS
 flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
 
+# Point to the system-installed list
+FLATPAK_LIST="$CONFIG_DIR/flatpaks.txt"
+
 if [ -f "$FLATPAK_LIST" ]; then
-    echo "📦 Installing Flatpaks from $FLATPAK_LIST..."
-    mapfile -t APPS < <(grep -vE '^\s*#|^\s*$' "$FLATPAK_LIST")
+    echo "📦 Installing Flatpaks from system config..."
+    # Fix: prevent grep failure from exiting the script (return true if no matches)
+    mapfile -t APPS < <(grep -vE '^\s*#|^\s*$' "$FLATPAK_LIST" || true)
 
     if [ ${#APPS[@]} -gt 0 ]; then
         flatpak install -y flathub "${APPS[@]}"
     fi
 else
-    echo "⚠️  Warning: Config file not found at $FLATPAK_LIST"
+    echo "⚠️  Warning: $FLATPAK_LIST not found. Skipping Flatpaks."
 fi
 
 # 3. DISTROBOX
+DISTROBOX_INI="$CONFIG_DIR/distrobox.ini"
+
 if [ -f "$DISTROBOX_INI" ]; then
-    echo "📦 Assembling Distroboxes from $DISTROBOX_INI..."
+    echo "📦 Assembling Distroboxes..."
     if command -v distrobox &> /dev/null; then
         distrobox assemble create --file "$DISTROBOX_INI"
     fi

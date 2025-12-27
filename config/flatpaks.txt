@@ -1,41 +1,42 @@
-com.bitwarden.desktop
-com.bitwig.BitwigStudio
-com.discordapp.Discord
-com.github.tchx84.Flatseal
-com.mattjakeman.ExtensionManager
-com.raggesilver.BlackBox
-com.ranfdev.DistroShelf
-com.spotify.Client
-com.valvesoftware.Steam
-com.vscodium.codium
-de.haeckerfelix.Shortwave
-dev.zed.Zed
-io.github.celluloid_player.Celluloid
-io.github.flattool.Warehouse
-io.missioncenter.MissionCenter
-md.obsidian.Obsidian
-net.lutris.Lutris
-org.blender.Blender
-org.chromium.Chromium
-org.gimp.GIMP
-org.gnome.Baobab
-org.gnome.Boxes
-org.gnome.Calculator
-org.gnome.Calendar
-org.gnome.Characters
-org.gnome.Clocks
-org.gnome.Connections
-org.gnome.Contacts
-org.gnome.Evince
-org.gnome.Logs
-org.gnome.Loupe
-org.gnome.Maps
-org.gnome.Shell.Extensions.GSConnect
-org.gnome.TextEditor
-org.gnome.Weather
-org.gnome.World.PikaBackup
-org.inkscape.Inkscape
-org.mozilla.Thunderbird
-org.mozilla.firefox
-org.signal.Signal
-sw.kovidgoyal.kitty
+# --- MVP: No Flatpaks initially ---
+# com.bitwarden.desktop
+# com.bitwig.BitwigStudio
+# com.discordapp.Discord
+# com.github.tchx84.Flatseal
+# com.mattjakeman.ExtensionManager
+# com.raggesilver.BlackBox
+# com.ranfdev.DistroShelf
+# com.spotify.Client
+# com.valvesoftware.Steam
+# com.vscodium.codium
+# de.haeckerfelix.Shortwave
+# dev.zed.Zed
+# io.github.celluloid_player.Celluloid
+# io.github.flattool.Warehouse
+# io.missioncenter.MissionCenter
+# md.obsidian.Obsidian
+# net.lutris.Lutris
+# org.blender.Blender
+# org.chromium.Chromium
+# org.gimp.GIMP
+# org.gnome.Baobab
+# org.gnome.Boxes
+# org.gnome.Calculator
+# org.gnome.Calendar
+# org.gnome.Characters
+# org.gnome.Clocks
+# org.gnome.Connections
+# org.gnome.Contacts
+# org.gnome.Evince
+# org.gnome.Logs
+# org.gnome.Loupe
+# org.gnome.Maps
+# org.gnome.Shell.Extensions.GSConnect
+# org.gnome.TextEditor
+# org.gnome.Weather
+# org.gnome.World.PikaBackup
+# org.inkscape.Inkscape
+# org.mozilla.Thunderbird
+# org.mozilla.firefox
+# org.signal.Signal
+# sw.kovidgoyal.kitty

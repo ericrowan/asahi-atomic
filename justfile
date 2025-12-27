@@ -12,6 +12,14 @@ default:
 # 1. DEVELOPMENT WORKFLOW
 # -----------------------------------------------------------------------------
 
+# Build container locally
+build:
+    podman build \
+        --platform linux/arm64 \
+        -f config/Containerfile \
+        -t localhost/asahi-atomic:latest \
+        .
+
 # Lint all scripts
 lint:
     @echo "🔍 Scanning scripts with ShellCheck..."
@@ -37,9 +45,9 @@ dev:
 # -----------------------------------------------------------------------------
 
 # Test locally (Build VM)
-test tag="dev":
+test tag="latest": build
     @echo "🧪 Testing Tag: {{ tag }}"
-    just build-vm "ghcr.io/ericrowan/asahi-atomic:{{ tag }}"
+    just build-vm "localhost/asahi-atomic:{{ tag }}"
     just run-vm
 
 # Clean test environment
@@ -50,7 +58,7 @@ test-clean tag="dev":
 # [Internal] Build the VM Image
 build-vm image:
     #!/bin/bash
-    set -e
+    set -ex
     
     # Ensure root privileges
     if [ "$EUID" -ne 0 ]; then

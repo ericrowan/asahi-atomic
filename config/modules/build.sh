@@ -41,15 +41,15 @@ rpm-ostree override remove "${REMOVE_PKGS[@]}" \
 # 2. MANUAL INSTALLS (Constraint 1)
 # -----------------------------------------------------------------------------
 
-echo "✨ Installing Starship..."
-curl -sS https://starship.rs/install.sh | sh -s -- -y -b /usr/bin
+# echo "✨ Installing Starship..."
+# curl -sS https://starship.rs/install.sh | sh -s -- -y -b /usr/bin
 
-echo "🍬 Installing Gum..."
-GUM_VERSION="0.13.0"
-curl -L -o /tmp/gum.tar.gz "https://github.com/charmbracelet/gum/releases/download/v${GUM_VERSION}/gum_${GUM_VERSION}_linux_arm64.tar.gz"
-tar -xf /tmp/gum.tar.gz -C /tmp
-mv /tmp/gum /usr/bin/gum
-chmod +x /usr/bin/gum
+# echo "🍬 Installing Gum..."
+# GUM_VERSION="0.13.0"
+# curl -L -o /tmp/gum.tar.gz "https://github.com/charmbracelet/gum/releases/download/v${GUM_VERSION}/gum_${GUM_VERSION}_linux_arm64.tar.gz"
+# tar -xf /tmp/gum.tar.gz -C /tmp
+# mv /tmp/gum /usr/bin/gum
+# chmod +x /usr/bin/gum
 
 # -----------------------------------------------------------------------------
 # 3. SYSTEM TWEAKS & CONFIGURATION
@@ -58,12 +58,12 @@ chmod +x /usr/bin/gum
 echo "⚙️  Applying System Tweaks..."
 
 # Enable Services
-systemctl enable tailscaled
+# systemctl enable tailscaled
 systemctl enable podman.socket
 
 # Shell Setup
-usermod -s /usr/bin/fish root
-sed -i 's|SHELL=/bin/bash|SHELL=/usr/bin/fish|' /etc/default/useradd
+# usermod -s /usr/bin/fish root
+# sed -i 's|SHELL=/bin/bash|SHELL=/usr/bin/fish|' /etc/default/useradd
 
 # Flathub Repository
 flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
