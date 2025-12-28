@@ -1,0 +1,57 @@
+name: Debug Signing Keys
+on: [push, workflow_dispatch]
+
+jobs:
+  verify-keys:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@v3.3.0
+
+      - name: Debug Key Match
+        run: |
+          echo "🔍 Checking Keys..."
+
+          # 1. Check if cosign.pub exists in repo
+          if [ ! -f cosign.pub ]; then
+            echo "❌ CRITICAL: cosign.pub NOT found in repo root!"
+            exit 1
+          fi
+          echo "✅ cosign.pub found in repo."
+
+          # 2. Check if Secret is present (without revealing it)
+          if [ -z "${{ secrets.SIGNING_SECRET }}" ]; then
+            echo "❌ CRITICAL: SIGNING_SECRET is empty! Check Repo Settings > Secrets."
+            exit 1
+          fi
+          echo "✅ SIGNING_SECRET is present."
+
+          # 3. Derive Public Key from Private Key Secret
+          echo "${{ secrets.SIGNING_SECRET }}" > derived_key.key
+
+          # Attempt to extract public key (catches bad format/spaces)
+          if ! cosign public-key --key derived_key.key > derived_public.pub 2> error.log; then
+             echo "❌ CRITICAL: Could not read SIGNING_SECRET. Is it formatted correctly?"
+             echo "Error log:"
+             cat error.log
+             exit 1
+          fi
+
+          # 4. Compare Repo Public Key vs Secret-Derived Public Key
+          echo "comparing repo 'cosign.pub' with secret-derived key..."
+
+          # Normalize whitespace for comparison
+          cat cosign.pub | tr -d '[:space:]' > repo_clean.pub
+          cat derived_public.pub | tr -d '[:space:]' > secret_clean.pub
+
+          if cmp -s repo_clean.pub secret_clean.pub; then
+             echo "🎉 SUCCESS: The Secret and the Public Key MATCH!"
+             echo "The issue is likely in the BlueBuild configuration, not the keys."
+          else
+             echo "❌ FATAL MISMATCH: The SIGNING_SECRET in GitHub does not match cosign.pub in the repo."
+             echo "Did you regenerate the key but forget to update the GitHub Secret (or vice versa)?"
+             exit 1
+          fi
