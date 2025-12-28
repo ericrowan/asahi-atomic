@@ -29,19 +29,24 @@ fi
 echo "🍺 Installing CLI Power Tools..."
 eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 
-# Alphabetized List
-brew install \
-    bat \
-    eza \
-    fastfetch \
-    fish \
-    fzf \
-    gh \
-    gum \
-    lazygit \
-    ripgrep \
-    starship \
-    zoxide
+# The Definitive User Toolset
+bat \
+btop \
+eza \
+fastfetch \
+fzf \
+gh \
+gum \
+htop \
+kitty \
+lazygit \
+mc \
+nvtop \
+p7zip \
+ripgrep \
+starship \
+unrar \
+zoxide
 
 # 3. CONFIGURE SHELL (Post-Brew)
 # Since Fish is now installed via Brew, add it to /etc/shells and chsh

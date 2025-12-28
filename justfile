@@ -128,6 +128,10 @@ build-vm image:
             grub2-install --force --target=arm64-efi --efi-directory=/target/boot/efi --boot-directory=/target/boot --removable --recheck /dev/loop0
         "
 
+    echo "🎨 Branding Boot Menu..."
+    sed -i 's/Silverblue/WavyOS/g' /mnt/asahi_vm/boot/loader/entries/*.conf
+    sed -i 's/Fedora Linux/WavyOS/g' /mnt/asahi_vm/boot/loader/entries/*.conf
+
     mount -o remount,rw /mnt/asahi_vm || true
 
     # Configs

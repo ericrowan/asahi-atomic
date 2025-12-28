@@ -7,30 +7,26 @@
 ## 🏗️ Architecture
 *   **Build System:** GitHub Actions builds the image → Pushes to GHCR.
 *   **Local Dev:** `just test` pulls the GHCR image, builds a VM disk, and boots QEMU.
-*   **Installer:** `scripts/install-os.sh` performs a "Takeover" install on bare metal (wipes partition, installs image).
 *   **User Setup:** `setup-user.sh` (baked into `/usr/bin/`) handles "Hydration" (Flatpaks, Homebrew, Distrobox) on first boot.
+
+## 🛡️ Critical Infrastructure (DO NOT DELETE)
+*   **`scripts/install-os.sh`**: This is the **Bare Metal Bootstrap**. It is NOT used in the CI/VM loop, but it is the **Product**. It performs the "Takeover" install on physical hardware. **Never delete this file.**
+*   **`config/packages.txt`**: The source of truth for System RPMs.
+*   **`config/flatpaks.txt`**: The source of truth for User Apps.
 
 ## 🛠️ Tech Stack & Decisions
 1.  **Package Managers:**
-    *   **RPM-OSTree:** Core system only (Drivers, VPN, Shell).
+    *   **RPM-OSTree:** Minimal Core only (Drivers, VPN, Shell, GCC/Make).
+    *   **Homebrew:** **Primary CLI Package Manager.** (Starship, Eza, Gum, Git, Lazygit).
     *   **Flatpak:** All GUI Apps.
-    *   **Homebrew:** User-space CLI tools (Starship, Eza, Gum).
-    *   **Distrobox (DNF):** Heavy dev tools (Compilers, Python, Node).
+    *   **Distrobox (DNF):** Heavy dev tools (Node, Python).
 2.  **Shell:** Fish is the default. Configured via `/etc/fish/conf.d/wavy-defaults.fish`.
 3.  **Workarounds:**
-    *   **Starship/Gum:** Installed via manual binary (`curl`) in build module because Fedora 42 AArch64 repos are missing them.
-    *   **Audio:** Custom Wireplumber LUA script and Pipewire Quantum config baked in to fix M1 Pro crackling/volume bugs.
-    *   **Boot:** `grub2-install` is forced manually in the VM builder to support QEMU booting of the Asahi kernel.
+    *   **Audio:** Custom Wireplumber/Pipewire configs baked into `/usr/share` and `/etc` to fix M1 Pro crackling/volume bugs.
+    *   **Boot:** `grub2-install` is forced manually in `Justfile` (build-vm) to support QEMU booting.
 
 ## 🚧 Current Status (Dec 2025)
 *   **Build:** Green (GitHub Actions).
 *   **VM:** Boots successfully into Silverblue.
 *   **UX:** Custom "WavyOS" wallpaper and GSchema overrides (Dark mode, Bottom dock) applied.
-*   **Known Issues:** 
-    *   Software rendering in VM (slow).
-    *   No native GPU compute for AI in containers yet.
-
-## 🔮 Roadmap
-1.  **First Boot:** Refine `welcome.sh` TUI.
-2.  **Migration Guide:** Documentation for macOS users.
-3.  **Real Metal:** Validate install on physical M1 Pro.
+*   **Workflow:** `just push` triggers cloud build. `just test` validates it.
