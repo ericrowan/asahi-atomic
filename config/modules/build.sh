@@ -3,9 +3,6 @@ set -ouex pipefail
 
 echo "🚀 Starting System Build Module..."
 
-# 1. ADD EXTERNAL REPOS (Signal Desktop - Native ARM64)
-curl -o /etc/yum.repos.d/signal.repo https://copr.fedorainfracloud.org/coprs/elagostin/signal-desktop/repo/fedora-rawhide/elagostin-signal-desktop-fedora-rawhide.repo
-
 # -----------------------------------------------------------------------------
 # 2. PACKAGE MANAGEMENT (Single Transaction)
 # -----------------------------------------------------------------------------
