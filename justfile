@@ -1,81 +1,51 @@
-# 🌊 WavyOS Command Center (BlueBuild Edition)
-# -----------------------------------------------------------------------------
-# GLOBAL SETTINGS
+# 🌊 WavyOS Command Center
 # -----------------------------------------------------------------------------
 
 set shell := ["bash", "-c"]
 
-# Image name matches 'name' in recipe.yml
-
 image_name := "wavyos"
-
-# Registry
-
 registry := "ghcr.io/ericrowan"
 
-# Current git branch for tagging
+# Get current branch
 
-tag := `git rev-parse --abbrev-ref HEAD`
+branch := `git rev-parse --abbrev-ref HEAD`
 
 default:
     @just --list
 
 # -----------------------------------------------------------------------------
-# 1. DEVELOPMENT WORKFLOW
+# 1. THE "MAGIC" LOOP
 # -----------------------------------------------------------------------------
+# Commit, Push, Watch, and Launch VM
 
-# Lint recipe.yml (Placeholder for now)
-lint:
-    @echo "🔍 Checking configuration..."
-    @# Future: yamllint recipes/recipe.yml
-    @echo "✅ Configuration passed."
-
-# Watch the GitHub Action (Requires gh cli)
-watch:
-    @echo "👀 Waiting for GitHub to start build..."
-    @sleep 5
-    gh run watch --exit-status || echo "⚠️ Build finished or failed. Check 'gh run list'."
-
-# Commit, Push, Watch, and Test
-
-# Usage: just push "fix: some change"
-push msg="update": lint
+# Usage: just push "fix: something"
+push msg="update":
+    @echo "📦 Committing..."
     git add .
-    git commit -m "{{ msg }}" || echo "⚠️ Nothing to commit, proceeding..."
+    git commit -m "{{ msg }}" || echo "⚠️ Nothing to commit, pushing anyway..."
     git push
-    just watch
-    @echo "✅ Cloud Build Complete. Pulling & Testing..."
-    just test
-
-# 🧠 AI ASSISTANT
-ask prompt:
-    @echo "🤖 Asking Gemini..."
-    @cat .ai/PROJECT_CONTEXT.md GEMINI.md | gemini chat "CONTEXT: You are the Project Manager for WavyOS. Use the provided context. \n\n QUESTION: {{ prompt }}"
+    @echo "👀 Waiting for GitHub Action on branch '{{ branch }}'..."
+    @sleep 5
+    @# Get the latest Run ID for this branch and watch it. If it passes, run test.
+    gh run watch $(gh run list --branch {{ branch }} --limit 1 --json databaseId -q '.[0].databaseId') --exit-status && just test
 
 # -----------------------------------------------------------------------------
-# 2. TESTING & VM (Cloud-Native)
+# 2. TESTING & VM
 # -----------------------------------------------------------------------------
 
-# Clean up previous test artifacts
-clean:
-    sudo rm -rf output/
-    @echo "🧹 Output cleaned."
-
-# Test the Cloud Image (Pulls from GHCR -> Builds VM -> Boots)
+# Pull image, build VM, and boot (Only runs if build succeeded)
 test:
-    @echo "🧪 Testing Image: {{ registry }}/{{ image_name }}:{{ tag }}"
-    # Pull the latest image from the cloud
-    podman pull {{ registry }}/{{ image_name }}:{{ tag }}
-    # Build the VM disk
-    just build-vm "{{ registry }}/{{ image_name }}:{{ tag }}"
-    # Run it
+    @echo "⬇️  Pulling latest image..."
+    podman pull {{ registry }}/{{ image_name }}:latest
+    @echo "🏗️  Building VM..."
+    just build-vm "{{ registry }}/{{ image_name }}:latest"
+    @echo "🚀 Booting..."
     just run-vm
 
 # [Internal] Build the VM Image using bootc
 build-vm image:
     #!/bin/bash
-    set -ex
-
+    set -e
     # Ensure root privileges
     if [ "$EUID" -ne 0 ]; then
         echo "⚠️  This recipe requires root privileges."
@@ -117,7 +87,6 @@ build-vm image:
     mount "${LOOP}p1" /mnt/wavy_vm/boot/efi
 
     echo "🚀 Installing OS (bootc)..."
-    # We mount the image to install it to the loopback device
     podman run --rm --privileged --pid=host --security-opt label=type:unconfined_t \
         -v /dev:/dev -v /mnt/wavy_vm:/target \
         "$IMAGE" \
