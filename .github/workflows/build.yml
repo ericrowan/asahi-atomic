@@ -14,7 +14,7 @@ on:
 jobs:
   bluebuild:
     name: Build WavyOS
-    runs-on: ubuntu-latest # We accept our fate (Intel Runner)
+    runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
@@ -25,21 +25,30 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      # 1. Enable QEMU (The Translator)
+      # 1. Enable QEMU (Essential for ARM64 on Intel Runner)
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
         with:
           platforms: arm64
 
-      # 2. Install BlueBuild CLI (The Generator)
+      # 2. Install BlueBuild CLI (The Official Way)
+      # We run the installer container to drop the binary into /usr/local/bin
       - name: Install BlueBuild CLI
-        uses: blue-build/github-action/setup-bluebuild@v1.8
+        run: |
+          docker run --rm \
+          -v /usr/local/bin:/out \
+          ghcr.io/blue-build/cli:latest-installer
 
-      # 3. Generate the Containerfile (Don't build yet)
+      # 3. Generate the Containerfile
+      # We explicitly tell it where the recipe is.
       - name: Generate Containerfile
-        run: bluebuild generate -o Containerfile recipes/recipe.yml
+        run: |
+          bluebuild generate -o Containerfile recipe.yml
+          echo "🔍 Generated Containerfile Content:"
+          cat Containerfile
 
-      # 4. Build with Podman (The Engine) - EXPLICIT PLATFORM
+      # 4. Build with Buildah (Red Hat's Builder)
+      # We explicitly force the platform here.
       - name: Build Image
         id: build
         uses: redhat-actions/buildah-build@v2
@@ -47,11 +56,8 @@ jobs:
           image: wavyos
           tags: latest ${{ github.sha }}
           containerfiles: ./Containerfile
-          # ⚠️ THE MAGIC FIX: Force ARM64 architecture
+          # ⚠️ THE FIX: Force ARM64 architecture
           platforms: linux/arm64
-          # Mount the cosign keys so the build can see them (if needed)
-          # build-args: |
-          #   ...
 
       # 5. Push to GHCR
       - name: Push to GHCR
