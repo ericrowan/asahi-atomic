@@ -14,7 +14,7 @@ openssl
 plocate
 powertop
 procps-ng
-signal-desktop
+#signal-desktop
 spice-vdagent
 steam
 sushi
