@@ -1,70 +1,48 @@
-name: BlueBuild WavyOS
-on:
-  schedule:
-    - cron: "00 06 * * *"
-  push:
-    paths-ignore:
-      - "**.md"
-    branches:
-      - bluebuild-pivot
-      - main
-  pull_request:
-  workflow_dispatch:
+name: MVP Build
+on: [push, workflow_dispatch]
 
 jobs:
-  bluebuild:
-    name: Build WavyOS
+  mvp-build:
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
       id-token: write
-    strategy:
-      fail-fast: false
     steps:
-      - name: Checkout repo
+      - name: Checkout
         uses: actions/checkout@v4
 
-      # 1. Enable QEMU (Essential for ARM64 on Intel Runner)
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
         with:
           platforms: arm64
 
-      # 2. Install BlueBuild CLI (The Official Way)
-      # We run the installer container to drop the binary into /usr/local/bin
-      - name: Install BlueBuild CLI
+      - name: Install BlueBuild
         run: |
           docker run --rm \
-          -v /usr/local/bin:/out \
-          ghcr.io/blue-build/cli:latest-installer
+            -v /usr/local/bin:/out \
+            ghcr.io/blue-build/cli:latest-installer \
+            bash -c "cp /out/bluebuild /out/bluebuild && chmod +x /out/bluebuild"
 
-      # 3. Generate the Containerfile
-      # We explicitly tell it where the recipe is.
       - name: Generate Containerfile
         run: |
           bluebuild generate -o Containerfile recipe.yml
-          echo "🔍 Generated Containerfile Content:"
+          echo "=== DEBUG: CONTAINERFILE ==="
           cat Containerfile
 
-      # 4. Build with Buildah (Red Hat's Builder)
-      # We explicitly force the platform here.
       - name: Build Image
-        id: build
         uses: redhat-actions/buildah-build@v2
         with:
           image: wavyos
-          tags: latest ${{ github.sha }}
+          tags: mvp
           containerfiles: ./Containerfile
-          # ⚠️ THE FIX: Force ARM64 architecture
           platforms: linux/arm64
 
-      # 5. Push to GHCR
       - name: Push to GHCR
         uses: redhat-actions/push-to-registry@v2
         with:
           image: wavyos
-          tags: latest ${{ github.sha }}
+          tags: mvp
           registry: ghcr.io/${{ github.repository_owner }}
           username: ${{ github.actor }}
           password: ${{ github.token }}
