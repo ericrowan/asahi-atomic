@@ -1,50 +1,39 @@
-name: Build WavyOS
+name: BlueBuild WavyOS
 on:
-  push:
-    branches: [main, dev]
-    paths:
-      - "config/**" # Only build if config changes
   schedule:
-    - cron: "0 0 * * *" # Daily build
-
-env:
-  IMAGE_NAME: asahi-atomic
-  REGISTRY: ghcr.io/${{ github.repository_owner }}
+    - cron: "00 06 * * *" # Daily at 06:00 UTC
+  push:
+    paths-ignore:
+      - "**.md"
+    branches:
+      - bluebuild-pivot
+      - main
+  pull_request:
+  workflow_dispatch:
 
 jobs:
-  build:
-    runs-on: ubuntu-24.04-arm
+  bluebuild:
+    name: Build WavyOS
+    runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
-
+      id-token: write
+    strategy:
+      fail-fast: false
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Install Podman
-        run: sudo apt-get update && sudo apt-get install -y podman
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm64
 
-      - name: Generate Tag
-        id: tag
-        run: |
-          if [[ "${{ github.ref_name }}" == "main" ]]; then
-            echo "name=latest" >> $GITHUB_OUTPUT
-          else
-            echo "name=${{ github.ref_name }}" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Build Image
-        run: |
-          podman build \
-            --platform linux/arm64 \
-            -f config/Containerfile \
-            -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.tag.outputs.name }} \
-            .
-
-      - name: Login to GitHub Registry
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | podman login ghcr.io -u ${{ github.actor }} --password-stdin
-
-      - name: Push Image
-        run: |
-          podman push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.tag.outputs.name }}
+      - name: Build WavyOS
+        uses: blue-build/github-action@v1.8
+        with:
+          recipe: recipes/recipe.yml
+          cosign_private_key: ${{ secrets.SIGNING_SECRET }}
+          registry_token: ${{ github.token }}
+          pr_event_number: ${{ github.event.number }}
