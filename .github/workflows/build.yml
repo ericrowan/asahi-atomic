@@ -23,8 +23,9 @@ jobs:
           bluebuild --version
 
       - name: Generate Containerfile
+        # ✅ FIX: Explicitly point to recipes/recipe.yml
         run: |
-          bluebuild generate -o Containerfile recipe.yml
+          bluebuild generate -o Containerfile recipes/recipe.yml
           echo "=== DEBUG: CONTAINERFILE ==="
           cat Containerfile
 
