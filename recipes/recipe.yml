@@ -1,45 +1,36 @@
-name: wavyos
-description: A polished, immutable Fedora Asahi Remix experience.
-base-image: quay.io/fedora-asahi-remix-atomic-desktops/silverblue
-image-version: 42 # Matches Fedora version
+name: BlueBuild WavyOS
+on:
+  schedule:
+    - cron: "00 06 * * *" # Build daily at 06:00 UTC
+  push:
+    paths-ignore:
+      - "**.md"
+    branches:
+      - bluebuild-pivot
+      - main
+  pull_request:
+  workflow_dispatch:
 
-# ⚠️ CRITICAL: TARGET ARCHITECTURE
-# We are building for Apple Silicon. 
-# The GitHub Action must use QEMU to build this aarch64 image.
-modules:
-  - type: files
-    files:
-      - source: config/files
-        destination: /
+jobs:
+  bluebuild:
+    name: Build WavyOS
+    runs-on: ubuntu-24.04-arm # 🚀 NATIVE ARM64 RUNNER
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+    strategy:
+      fail-fast: false
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
 
-  - type: rpm-ostree
-    install:
-      - fish
-      - starship
-      - zoxide
-      - eza
-      - bat
-      - spice-vdagent
-      # Add other CLI tools here, NOT GUI apps (use Flatpak for those)
+      # 🗑️ Removed QEMU step (Not needed on native hardware)
 
-  - type: default-flatpaks
-    notify: true
-    system:
-      repo-url: https://dl.flathub.org/repo/flathub.flatpakrepo
-      repo-name: flathub
-      repo-title: "Flathub (System)"
-      install:
-        - org.gnome.TextEditor
-        - org.gnome.Loupe
-        # Add browser or terminal if desired
-
-  - type: fonts
-    fonts:
-      nerd-fonts:
-        - JetBrainsMono
-        - FiraCode
-
-  - type: systemd
-    system:
-      enabled:
-        - spice-vdagentd.service
+      - name: Build WavyOS
+        uses: blue-build/github-action@v1.8
+        with:
+          recipe: recipe.yml
+          cosign_private_key: ${{ secrets.SIGNING_SECRET }}
+          registry_token: ${{ github.token }}
+          pr_event_number: ${{ github.event.number }}
