@@ -17,12 +17,15 @@ jobs:
         with:
           platforms: arm64
 
+      # ✅ FIX: Download binary directly. No Docker weirdness.
       - name: Install BlueBuild
         run: |
-          docker run --rm \
-            -v /usr/local/bin:/out \
-            ghcr.io/blue-build/cli:latest-installer \
-            bash -c "cp /out/bluebuild /out/bluebuild && chmod +x /out/bluebuild"
+          echo "⬇️ Downloading BlueBuild CLI..."
+          curl -L -o bluebuild.tar.gz https://github.com/blue-build/cli/releases/latest/download/bluebuild-x86_64-unknown-linux-gnu.tar.gz
+          tar -xvf bluebuild.tar.gz
+          sudo mv bluebuild /usr/local/bin/bluebuild
+          chmod +x /usr/local/bin/bluebuild
+          bluebuild --version
 
       - name: Generate Containerfile
         run: |
