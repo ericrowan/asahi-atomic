@@ -1,44 +1,9 @@
 name: wavyos
-description: A polished, immutable Fedora Asahi Remix experience.
+description: MVP Build Test
 base-image: quay.io/fedora-asahi-remix-atomic-desktops/silverblue
-image-version: 42 # Matches Fedora version
+image-version: 42
 
-# ⚠️ CRITICAL: TARGET ARCHITECTURE
-# We are building for Apple Silicon (aarch64).
 modules:
-  - type: files
-    files:
-      - source: config/files
-        destination: /
-
   - type: rpm-ostree
     install:
-      - fish
-      - starship
-      - zoxide
-      - eza
-      - bat
-      - spice-vdagent
-      # Add other CLI tools here, NOT GUI apps (use Flatpak for those)
-
-  - type: default-flatpaks
-    notify: true
-    system:
-      repo-url: https://dl.flathub.org/repo/flathub.flatpakrepo
-      repo-name: flathub
-      repo-title: "Flathub (System)"
-      install:
-        - org.gnome.TextEditor
-        - org.gnome.Loupe
-        # Add browser or terminal if desired
-
-  - type: fonts
-    fonts:
-      nerd-fonts:
-        - JetBrainsMono
-        - FiraCode
-
-  - type: systemd
-    system:
-      enabled:
-        - spice-vdagentd.service
+      - nano
