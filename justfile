@@ -154,7 +154,6 @@ build-vm image:
 # [Internal] Run the VM
 run-vm:
     #!/bin/bash
-    set -e
     DISK_IMG="output/asahi-atomic-vm.img"
     [ ! -f "$DISK_IMG" ] && echo "❌ Disk not found" && exit 1
 
@@ -168,4 +167,7 @@ run-vm:
         -drive format=raw,file="$DISK_IMG" \
         -device virtio-gpu-pci,xres=1920,yres=1080 \
         -display gtk,gl=off \
-        -device qemu-xhci -device usb-kbd -device usb-tablet
+        -device qemu-xhci -device usb-kbd -device usb-tablet \
+        || true  # <--- Suppress errors on exit (clean Ctrl+C)
+
+    echo "🛑 VM Session Ended."

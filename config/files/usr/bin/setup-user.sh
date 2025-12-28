@@ -5,6 +5,11 @@
 set -e
 echo "💧 Hydrating User Space..."
 
+# Debug Mode
+if [[ "$1" == "--debug" ]]; then
+    set -x
+    echo "🐞 Debug Mode Enabled"
+fi
 # Define System Paths
 CONFIG_DIR="/usr/share/asahi-atomic"
 FLATPAK_LIST="$CONFIG_DIR/flatpaks.txt"

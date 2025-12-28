@@ -4,10 +4,10 @@ set -ouex pipefail
 echo "🚀 Starting System Build Module..."
 
 # -----------------------------------------------------------------------------
-# 2. PACKAGE MANAGEMENT (Single Transaction)
+# 1. DEFINE LISTS
 # -----------------------------------------------------------------------------
 
-# Bootloader & Core Tools
+# Bootloader & Core Tools (Must be present)
 BOOTLOADER_PKGS=(
     "grub2-efi-aa64"
     "grub2-efi-aa64-modules"
@@ -15,12 +15,6 @@ BOOTLOADER_PKGS=(
     "shim-aa64"
     "plymouth-plugin-script"
 )
-
-# Read User Packages (System Layer)
-USER_PKGS=()
-if [ -f "/tmp/config/packages.txt" ]; then
-    mapfile -t USER_PKGS < "/tmp/config/packages.txt"
-fi
 
 # Packages to Remove (Decrapify)
 REMOVE_PKGS=(
@@ -32,28 +26,39 @@ REMOVE_PKGS=(
     "yelp"
 )
 
-echo "📦 Executing rpm-ostree transaction..."
+# -----------------------------------------------------------------------------
+# 2. FAST PACKAGE RESOLUTION (Batch Mode)
+# -----------------------------------------------------------------------------
+
+USER_PKGS_RAW=()
+VERIFIED_PKGS=()
+
+if [ -f "/tmp/config/packages.txt" ]; then
+    # Read file into array
+    mapfile -t USER_PKGS_RAW < "/tmp/config/packages.txt"
+
+    echo "🔍 Verifying ${#USER_PKGS_RAW[@]} packages in batch..."
+
+    # SINGLE COMMAND: Ask DNF which packages exist from the list.
+    # --available: Check repos
+    # --qf '%{name}': Print only the package name
+    # sort -u: Deduplicate results
+    if [ ${#USER_PKGS_RAW[@]} -gt 0 ]; then
+        mapfile -t VERIFIED_PKGS < <(dnf repoquery --available --qf '%{name}' "${USER_PKGS_RAW[@]}" | sort -u)
+    fi
+
+    echo "✅ Verified ${#VERIFIED_PKGS[@]} valid packages."
+fi
+
+# -----------------------------------------------------------------------------
+# 3. EXECUTE TRANSACTION
+# -----------------------------------------------------------------------------
+
+echo "📦 Executing atomic transaction..."
 # shellcheck disable=SC2046
 rpm-ostree override remove "${REMOVE_PKGS[@]}" \
     $(printf -- "--install=%s " "${BOOTLOADER_PKGS[@]}") \
-    $(printf -- "--install=%s " "${USER_PKGS[@]}")
-
-# -----------------------------------------------------------------------------
-# 3. MANUAL INSTALLS
-# -----------------------------------------------------------------------------
-
-# Starship
-curl -sS https://starship.rs/install.sh | sh -s -- -y -b /usr/bin
-
-# Gum
-GUM_VERSION="0.13.0"
-GUM_URL="https://github.com/charmbracelet/gum/releases/download/v${GUM_VERSION}/gum_${GUM_VERSION}_linux_arm64.tar.gz"
-cd /tmp
-curl -L -o gum.tar.gz "$GUM_URL"
-tar -xf gum.tar.gz
-find . -type f -name "gum" -exec mv {} /usr/bin/gum \;
-chmod +x /usr/bin/gum
-rm -rf gum.tar.gz
+    $(printf -- "--install=%s " "${VERIFIED_PKGS[@]}")
 
 # -----------------------------------------------------------------------------
 # 4. SYSTEM TWEAKS
@@ -61,7 +66,7 @@ rm -rf gum.tar.gz
 
 echo "⚙️  Applying System Tweaks..."
 
-# WirePlumber: Disable Suspend
+# Audio: Disable Suspend (Fixes "Pop")
 mkdir -p /usr/share/wireplumber/main.lua.d
 cat <<EOF > /usr/share/wireplumber/main.lua.d/51-disable-suspend.lua
 table.insert (default_access.rules, {
@@ -76,7 +81,7 @@ table.insert (default_access.rules, {
 })
 EOF
 
-# PipeWire: Force High Quantum
+# Audio: Force High Quantum (Fixes Crackling)
 mkdir -p /etc/pipewire/pipewire.conf.d
 cat <<EOF > /etc/pipewire/pipewire.conf.d/99-quantum-fix.conf
 context.properties = {
@@ -85,8 +90,14 @@ context.properties = {
 }
 EOF
 
+# Branding: OS Release
+sed -i 's/Fedora Linux/WavyOS/g' /usr/lib/os-release
+sed -i 's/NAME="Fedora Linux"/NAME="WavyOS"/' /usr/lib/os-release
+sed -i 's/^ID=fedora/ID=wavyos\nID_LIKE=fedora/' /usr/lib/os-release
+
 # Services
 systemctl enable podman.socket
+systemctl enable spice-vdagentd
 
 # Flathub
 flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
