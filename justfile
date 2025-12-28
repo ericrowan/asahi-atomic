@@ -1,1 +1,166 @@
+# 🌊 WavyOS Command Center (BlueBuild Edition)
+# -----------------------------------------------------------------------------
+# GLOBAL SETTINGS
+# -----------------------------------------------------------------------------
 
+set shell := ["bash", "-c"]
+
+# Image name matches 'name' in recipe.yml
+
+image_name := "wavyos"
+
+# Registry
+
+registry := "ghcr.io/ericrowan"
+
+# Current git branch for tagging
+
+tag := `git rev-parse --abbrev-ref HEAD`
+
+default:
+    @just --list
+
+# -----------------------------------------------------------------------------
+# 1. DEVELOPMENT WORKFLOW
+# -----------------------------------------------------------------------------
+
+# Lint recipe.yml (Placeholder for now)
+lint:
+    @echo "🔍 Checking configuration..."
+    @# Future: yamllint recipes/recipe.yml
+    @echo "✅ Configuration passed."
+
+# Watch the GitHub Action (Requires gh cli)
+watch:
+    @echo "👀 Waiting for GitHub to start build..."
+    @sleep 5
+    gh run watch --exit-status || echo "⚠️ Build finished or failed. Check 'gh run list'."
+
+# Commit, Push, Watch, and Test
+
+# Usage: just push "fix: some change"
+push msg="update": lint
+    git add .
+    git commit -m "{{ msg }}" || echo "⚠️ Nothing to commit, proceeding..."
+    git push
+    just watch
+    @echo "✅ Cloud Build Complete. Pulling & Testing..."
+    just test
+
+# 🧠 AI ASSISTANT
+ask prompt:
+    @echo "🤖 Asking Gemini..."
+    @cat .ai/PROJECT_CONTEXT.md GEMINI.md | gemini chat "CONTEXT: You are the Project Manager for WavyOS. Use the provided context. \n\n QUESTION: {{ prompt }}"
+
+# -----------------------------------------------------------------------------
+# 2. TESTING & VM (Cloud-Native)
+# -----------------------------------------------------------------------------
+
+# Clean up previous test artifacts
+clean:
+    sudo rm -rf output/
+    @echo "🧹 Output cleaned."
+
+# Test the Cloud Image (Pulls from GHCR -> Builds VM -> Boots)
+test:
+    @echo "🧪 Testing Image: {{ registry }}/{{ image_name }}:{{ tag }}"
+    # Pull the latest image from the cloud
+    podman pull {{ registry }}/{{ image_name }}:{{ tag }}
+    # Build the VM disk
+    just build-vm "{{ registry }}/{{ image_name }}:{{ tag }}"
+    # Run it
+    just run-vm
+
+# [Internal] Build the VM Image using bootc
+build-vm image:
+    #!/bin/bash
+    set -ex
+
+    # Ensure root privileges
+    if [ "$EUID" -ne 0 ]; then
+        echo "⚠️  This recipe requires root privileges."
+        exec sudo "$0" "$@"
+    fi
+
+    IMAGE="{{ image }}"
+    OUTPUT_DIR="output"
+    DISK_IMG="$OUTPUT_DIR/wavyos-vm.img"
+    DISK_SIZE="15G"
+
+    echo "─── 🏗️  Building VM Image from $IMAGE ───"
+    mkdir -p "$OUTPUT_DIR"
+    truncate -s "$DISK_SIZE" "$DISK_IMG"
+
+    # Partitioning (GPT)
+    sfdisk "$DISK_IMG" > /dev/null <<EOF
+    label: gpt
+    , 500M, U
+    , , L
+    EOF
+
+    LOOP=$(losetup -P --find --show "$DISK_IMG")
+
+    function cleanup {
+        echo "🧹 Cleanup..."
+        mountpoint -q /mnt/wavy_vm/boot/efi && umount /mnt/wavy_vm/boot/efi
+        mountpoint -q /mnt/wavy_vm && umount /mnt/wavy_vm
+        losetup -d "$LOOP" 2>/dev/null || true
+    }
+    trap cleanup EXIT
+
+    mkfs.vfat -n "EFI" "${LOOP}p1" > /dev/null
+    mkfs.btrfs -L "WavyOS" -f "${LOOP}p2" > /dev/null
+
+    mkdir -p /mnt/wavy_vm
+    mount "${LOOP}p2" /mnt/wavy_vm
+    mkdir -p /mnt/wavy_vm/boot/efi
+    mount "${LOOP}p1" /mnt/wavy_vm/boot/efi
+
+    echo "🚀 Installing OS (bootc)..."
+    # We mount the image to install it to the loopback device
+    podman run --rm --privileged --pid=host --security-opt label=type:unconfined_t \
+        -v /dev:/dev -v /mnt/wavy_vm:/target \
+        "$IMAGE" \
+        /bin/bash -c "
+            bootc install to-filesystem --disable-selinux --skip-finalize /target && \
+            grub2-install --force --target=arm64-efi --efi-directory=/target/boot/efi --boot-directory=/target/boot --removable --recheck /dev/loop0
+        "
+
+    # Branding
+    sed -i 's/Fedora Linux/WavyOS/g' /mnt/wavy_vm/boot/loader/entries/*.conf || true
+
+    # GRUB Config
+    mount -o remount,rw /mnt/wavy_vm || true
+    mkdir -p /mnt/wavy_vm/boot/grub2 /mnt/wavy_vm/etc
+    ROOT_UUID=$(blkid -s UUID -o value "${LOOP}p2")
+    EFI_UUID=$(blkid -s UUID -o value "${LOOP}p1")
+
+    echo "search --no-floppy --fs-uuid --set=root $ROOT_UUID" > /mnt/wavy_vm/boot/grub2/grub.cfg
+    echo "set prefix=(\$root)/boot/grub2" >> /mnt/wavy_vm/boot/grub2/grub.cfg
+    echo "insmod blscfg" >> /mnt/wavy_vm/boot/grub2/grub.cfg
+    echo "blscfg" >> /mnt/wavy_vm/boot/grub2/grub.cfg
+
+    echo "UUID=$ROOT_UUID / btrfs subvol=root 0 0" > /mnt/wavy_vm/etc/fstab
+    echo "UUID=$EFI_UUID /boot/efi vfat defaults 0 2" >> /mnt/wavy_vm/etc/fstab
+
+    if [ -n "$SUDO_USER" ]; then chown "$SUDO_USER:$SUDO_USER" "$DISK_IMG"; fi
+    echo "✅ VM Ready."
+
+# [Internal] Run the VM
+run-vm:
+    #!/bin/bash
+    DISK_IMG="output/wavyos-vm.img"
+    [ ! -f "$DISK_IMG" ] && echo "❌ Disk not found" && exit 1
+
+    SUDO=""
+    [ ! -w /dev/kvm ] && SUDO="sudo"
+
+    echo "🚀 Booting WavyOS VM..."
+    $SUDO qemu-system-aarch64 \
+        -M virt,accel=kvm -m 6G -smp 4 -cpu host \
+        -bios /usr/share/edk2/aarch64/QEMU_EFI.fd \
+        -drive format=raw,file="$DISK_IMG" \
+        -device virtio-gpu-pci,xres=1920,yres=1080 \
+        -display gtk,gl=off \
+        -device qemu-xhci -device usb-kbd -device usb-tablet \
+        || true
