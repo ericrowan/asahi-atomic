@@ -10,6 +10,7 @@ if [[ "$1" == "--debug" ]]; then
     set -x
     echo "🐞 Debug Mode Enabled"
 fi
+
 # Define System Paths
 CONFIG_DIR="/usr/share/asahi-atomic"
 FLATPAK_LIST="$CONFIG_DIR/flatpaks.txt"
@@ -43,14 +44,12 @@ fzf \
 gh \
 gum \
 htop \
-kitty \
 lazygit \
 mc \
 nvtop \
 p7zip \
 ripgrep \
 starship \
-unrar \
 zoxide
 
 # 3. CONFIGURE SHELL (Post-Brew)
