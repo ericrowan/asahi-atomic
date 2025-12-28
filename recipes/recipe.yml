@@ -2,7 +2,6 @@ name: wavyos
 description: A polished, immutable Fedora Asahi Remix experience.
 base-image: quay.io/fedora-asahi-remix-atomic-desktops/silverblue
 image-version: 42 # Matches Fedora version
-blue-build-tag: 0.9.7 # Optional, pin if needed
 
 # ⚠️ CRITICAL: TARGET ARCHITECTURE
 # We are building for Apple Silicon. 
