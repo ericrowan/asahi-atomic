@@ -1,7 +1,7 @@
 name: BlueBuild WavyOS
 on:
   schedule:
-    - cron: "00 06 * * *" # Build daily at 06:00 UTC
+    - cron: "00 06 * * *"
   push:
     paths-ignore:
       - "**.md"
@@ -14,7 +14,7 @@ on:
 jobs:
   bluebuild:
     name: Build WavyOS
-    runs-on: ubuntu-latest # Standard runner (Safe)
+    runs-on: ubuntu-latest # We accept our fate (Intel Runner)
     permissions:
       contents: read
       packages: write
@@ -25,16 +25,40 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
+      # 1. Enable QEMU (The Translator)
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
         with:
           platforms: arm64
 
-      - name: Build WavyOS
-        uses: blue-build/github-action@v1.8
+      # 2. Install BlueBuild CLI (The Generator)
+      - name: Install BlueBuild CLI
+        uses: blue-build/github-action/setup-bluebuild@v1.8
+
+      # 3. Generate the Containerfile (Don't build yet)
+      - name: Generate Containerfile
+        run: bluebuild generate -o Containerfile recipes/recipe.yml
+
+      # 4. Build with Podman (The Engine) - EXPLICIT PLATFORM
+      - name: Build Image
+        id: build
+        uses: redhat-actions/buildah-build@v2
         with:
-          recipe: recipe.yml
-          cosign_private_key: ${{ secrets.SIGNING_SECRET }}
-          registry_token: ${{ github.token }}
-          pr_event_number: ${{ github.event.number }}
-          # QEMU is handled by the step above
+          image: wavyos
+          tags: latest ${{ github.sha }}
+          containerfiles: ./Containerfile
+          # ⚠️ THE MAGIC FIX: Force ARM64 architecture
+          platforms: linux/arm64
+          # Mount the cosign keys so the build can see them (if needed)
+          # build-args: |
+          #   ...
+
+      # 5. Push to GHCR
+      - name: Push to GHCR
+        uses: redhat-actions/push-to-registry@v2
+        with:
+          image: wavyos
+          tags: latest ${{ github.sha }}
+          registry: ghcr.io/${{ github.repository_owner }}
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
