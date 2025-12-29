@@ -4,41 +4,30 @@ base-image: quay.io/fedora-asahi-remix-atomic-desktops/silverblue
 image-version: 42
 
 modules:
-  # 1. System Overlays (Configs)
-  # Populates /etc and /usr/share from local config/files
+  # 1. System Overlays
   - type: files
     files:
       - source: config/files
         destination: /
 
-  # 2. Core Packages (RPMs)
+  # 2. Core Infrastructure (Minimal)
   - type: rpm-ostree
     install:
-      # --- Shell & Terminal ---
+      # --- Shell Essentials ---
       - fish
       - starship
-      - zoxide
-      - eza
-      - bat
-      - fd-find
-      - ripgrep
-      - fzf
-      - btop
-      - fastfetch
       
-      # --- System Utils ---
+      # --- Bootstrapping Tools ---
+      # Needed to run 'just setup' / Homebrew
       - git
       - wget
       - curl
-      - 7zip
-      - fuse
       
-      # --- Asahi Specifics ---
-      # Essential tools for boot management on Apple Silicon
+      # --- Asahi Hardware Support ---
       - asahi-bless
       - asahi-scripts
 
-  # 3. Font Support (Required for Starship/Terminal icons)
+  # 3. Font Support (Keep this, it's low risk and high UI value)
   - type: fonts
     fonts:
       nerd-fonts:
