@@ -4,16 +4,20 @@ base-image: quay.io/fedora-asahi-remix-atomic-desktops/silverblue
 image-version: 42
 
 modules:
+  # 1. System Overlays
+  # Now points to the 'system' folder we just created
   - type: files
     files:
-      - source: config/files
+      - source: system
         destination: /
 
+  # 2. Core Infrastructure
   - type: rpm-ostree
     install:
       - fish
       - zsh
 
+  # 3. Font Support
   - type: fonts
     fonts:
       nerd-fonts:

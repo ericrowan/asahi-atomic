@@ -15,7 +15,7 @@ jobs:
       - name: Generate Containerfile
         run: |
           echo "📝 Generating Containerfile..."
-          # We let BlueBuild generate the file and WE DO NOT TOUCH IT.
+          # Standard generation. NO SED. NO EDITING.
           docker run --rm \
             -v ${{ github.workspace }}:/app \
             -w /app \
