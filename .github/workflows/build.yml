@@ -15,17 +15,14 @@ jobs:
       - name: Generate Containerfile
         run: |
           echo "📝 Generating Containerfile..."
+          # We let BlueBuild generate the file and WE DO NOT TOUCH IT.
           docker run --rm \
             -v ${{ github.workspace }}:/app \
             -w /app \
             ghcr.io/blue-build/cli:latest \
             bluebuild generate -o Containerfile recipes/recipe.yml
           
-          echo "✂️  REMOVING COSIGN FROM BUILD..."
-          sed -i '/ghcr.io\/sigstore\/cosign/d' Containerfile
-          sed -i '/COPY --from=.*cosign/d' Containerfile
-          
-          echo "=== DEBUG: FINAL CONTAINERFILE ==="
+          echo "=== DEBUG: CONTAINERFILE ==="
           cat Containerfile
 
       - name: Build Image
