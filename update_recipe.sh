@@ -1,3 +1,9 @@
+#!/bin/bash
+set -e
+
+echo "🔧 Hydrating recipes/recipe.yml with Core Packages..."
+
+cat << 'YAML' > recipes/recipe.yml
 name: wavyos
 description: A polished, immutable Fedora Asahi Remix experience.
 base-image: quay.io/fedora-asahi-remix-atomic-desktops/silverblue
@@ -44,3 +50,8 @@ modules:
       nerd-fonts:
         - JetBrainsMono
         - FiraCode
+YAML
+
+echo "📦 Committing and Pushing..."
+# Using your 'just push' workflow which handles the git add/commit/push + watch loop
+just push "feat: add core cli packages and fonts"
