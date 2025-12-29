@@ -3,7 +3,7 @@ on: [push, workflow_dispatch]
 
 jobs:
   mvp-build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04-arm
     permissions:
       contents: read
       packages: write
@@ -12,20 +12,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-        with:
-          platforms: arm64
-
-      - name: Install BlueBuild
-        run: |
-          docker run --rm ghcr.io/blue-build/cli:latest-installer | sudo bash
-          bluebuild --version
-
       - name: Generate Containerfile
-        # ✅ FIX: Explicitly point to recipes/recipe.yml
         run: |
-          bluebuild generate -o Containerfile recipes/recipe.yml
+          echo "📝 Generating Containerfile..."
+          docker run --rm \
+            -v ${{ github.workspace }}:/app \
+            -w /app \
+            ghcr.io/blue-build/cli:latest \
+            generate -o Containerfile recipes/recipe.yml
+          
           echo "=== DEBUG: CONTAINERFILE ==="
           cat Containerfile
 
