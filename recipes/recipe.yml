@@ -10,7 +10,7 @@ modules:
       - source: config/files
         destination: /
 
-  # 2. Core Infrastructure (Minimal)
+  # 2. Core Infrastructure
   - type: rpm-ostree
     install:
       # --- Shell Essentials ---
@@ -18,16 +18,12 @@ modules:
       - starship
       
       # --- Bootstrapping Tools ---
-      # Needed to run 'just setup' / Homebrew
+      # Required for 'just setup' / Homebrew installation
       - git
       - wget
       - curl
-      
-      # --- Asahi Hardware Support ---
-      - asahi-bless
-      - asahi-scripts
 
-  # 3. Font Support (Keep this, it's low risk and high UI value)
+  # 3. Font Support
   - type: fonts
     fonts:
       nerd-fonts:

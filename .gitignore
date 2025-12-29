@@ -6,3 +6,4 @@ tmp/
 .ai/logs/
 .ai/tmp/
 cosign.key
+.scripts

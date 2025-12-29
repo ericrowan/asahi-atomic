@@ -1,8 +1,8 @@
-name: MVP Build
+name: Build WavyOS
 on: [push, workflow_dispatch]
 
 jobs:
-  mvp-build:
+  build:
     runs-on: ubuntu-24.04-arm
     permissions:
       contents: read
@@ -15,7 +15,6 @@ jobs:
       - name: Generate Containerfile
         run: |
           echo "📝 Generating Containerfile..."
-          # FIX: Added 'bluebuild' before 'generate'
           docker run --rm \
             -v ${{ github.workspace }}:/app \
             -w /app \
@@ -29,7 +28,7 @@ jobs:
         uses: redhat-actions/buildah-build@v2
         with:
           image: wavyos
-          tags: mvp
+          tags: latest
           containerfiles: ./Containerfile
           platforms: linux/arm64
 
@@ -37,7 +36,7 @@ jobs:
         uses: redhat-actions/push-to-registry@v2
         with:
           image: wavyos
-          tags: mvp
+          tags: latest
           registry: ghcr.io/${{ github.repository_owner }}
           username: ${{ github.actor }}
           password: ${{ github.token }}
