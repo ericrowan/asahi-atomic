@@ -27,5 +27,4 @@ modules:
   - type: systemd
     system:
       enabled:
-        - rpm-ostreed-automatic.timer   # OS Updates
-        - flatpak-system-update.timer   # App Updates
+        - rpm-ostreed-automatic.timer
