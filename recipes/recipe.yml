@@ -28,3 +28,4 @@ modules:
     system:
       enabled:
         - rpm-ostreed-automatic.timer
+        # TODO: Add flatpak-system-update.timer once upstream issue is resolved
