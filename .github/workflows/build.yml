@@ -15,11 +15,12 @@ jobs:
       - name: Generate Containerfile
         run: |
           echo "📝 Generating Containerfile..."
+          # FIX: Added 'bluebuild' before 'generate'
           docker run --rm \
             -v ${{ github.workspace }}:/app \
             -w /app \
             ghcr.io/blue-build/cli:latest \
-            generate -o Containerfile recipes/recipe.yml
+            bluebuild generate -o Containerfile recipes/recipe.yml
           
           echo "=== DEBUG: CONTAINERFILE ==="
           cat Containerfile
