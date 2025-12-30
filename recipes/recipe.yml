@@ -21,6 +21,16 @@ modules:
       - firefox
       - firefox-langpacks
 
+  - type: fonts
+    fonts:
+      nerd-fonts:
+        - JetBrainsMono
+        - FiraCode
+      google-fonts:
+        - Inter
+        - Roboto
+        - Open Sans
+
   - type: systemd
     system:
       enabled:
