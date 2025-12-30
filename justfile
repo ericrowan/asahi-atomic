@@ -50,14 +50,14 @@ build-vm image:
     echo "🔍 Checking Image Freshness for: $IMAGE"
     
     # 1. Get Local Hash (if exists)
-    LOCAL_HASH=$(podman inspect --format '{{.Digest}}' "$IMAGE" 2>/dev/null || echo "none")
+    LOCAL_HASH=$(podman inspect --format '{{{{.Digest}}}}' "$IMAGE" 2>/dev/null || echo "none")
     
     # 2. Force Pull (Ensures we check the registry)
     echo "⬇️  Pulling latest manifest..."
     podman pull "$IMAGE"
     
     # 3. Get New Hash
-    NEW_HASH=$(podman inspect --format '{{.Digest}}' "$IMAGE")
+    NEW_HASH=$(podman inspect --format '{{{{.Digest}}}}' "$IMAGE")
 
     if [ "$LOCAL_HASH" != "$NEW_HASH" ]; then
         echo "✅ UPDATE DETECTED: $LOCAL_HASH -> $NEW_HASH"
