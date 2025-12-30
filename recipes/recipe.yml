@@ -4,11 +4,13 @@ base-image: quay.io/fedora-asahi-remix-atomic-desktops/silverblue
 image-version: 42
 
 modules:
+  # 1. System Overlays
   - type: files
     files:
       - source: system
         destination: /
 
+  # 2. Core Infrastructure (RPMs)
   - type: rpm-ostree
     install:
       - fish
@@ -22,6 +24,7 @@ modules:
       - firefox
       - firefox-langpacks
 
+  # 3. User Space Apps (Flatpaks)
   - type: default-flatpaks
     notify: true
     system:
@@ -32,15 +35,16 @@ modules:
         # --- Browsers ---
         - org.mozilla.firefox
 
-        # --- System ---
+        # --- System & Management ---
         - io.github.flattool.Warehouse
         - io.github.kolunmi.Bazaar
         - com.github.tchx84.Flatseal
         - io.missioncenter.MissionCenter
-        
-        # --- Dev ---
+
+        # --- Development ---
         - dev.zed.Zed
 
+  # 4. Fonts
   - type: fonts
     fonts:
       nerd-fonts:
@@ -49,6 +53,7 @@ modules:
       google-fonts:
         - Inter
 
+  # 5. Background Services
   - type: systemd
     system:
       enabled:
