@@ -1,115 +1,111 @@
 #!/bin/bash
-# ──────────────────────────────────────────────────────────────────────────────
-#  WAVYOS: BARE METAL INSTALLER (v10 - Hardened)
-# ──────────────────────────────────────────────────────────────────────────────
+# 
+# WAVYOS: BARE METAL INSTALLER (v11 - Sacred Echo)
+# 
 # Usage: sudo bash scripts/install-os.sh --live
-# Goal: Wipes a specific partition and installs the WavyOS image via bootc.
 
 set -e
+
+# --- COLORS (Catppuccin/Wavy Palette) ---
+RESET="\033[0m"
+BOLD="\033[1m"
+CYAN="\033[36m"     # Prompts
+PURPLE="\033[35m"   # Identity
+YELLOW="\033[33m"   # Success
+RED="\033[31m"      # Danger
+GRAY="\033[90m"     # Info
 
 # --- CONFIGURATION ---
 IMAGE="${IMAGE:-ghcr.io/ericrowan/wavyos:latest}"
 MOUNT_DIR="/mnt/wavy_install"
 
-# --- COLORS ---
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-BLUE='\033[0;34m'
-YELLOW='\033[0;33m'
-NC='\033[0m'
-
-# --- CLEANUP TRAP (Reliability) ---
+# --- CLEANUP TRAP ---
 function cleanup {
     if [ -d "$MOUNT_DIR" ]; then
-        echo "🧹 Cleaning up mounts..."
+        echo -e "${GRAY}🧹 Cleaning up mounts...${RESET}"
         umount -R "$MOUNT_DIR" 2>/dev/null || true
     fi
 }
 trap cleanup EXIT
 
-# --- LIABILITY DISCLAIMER ---
+# --- HEADER ---
 clear
-echo -e "${RED}╔════════════════════════════════════════════════════════════════════╗${NC}"
-echo -e "${RED}║                     ⚠️  NO WARRANTY  ⚠️                         ║${NC}"
-echo -e "${RED}╠════════════════════════════════════════════════════════════════════╣${NC}"
-echo -e "${RED}║ This software is provided 'as is' without warranty of any kind.    ║${NC}"
-echo -e "${RED}║ The authors allow you to use this at your own risk.                ║${NC}"
-echo -e "${RED}║                                                                    ║${NC}"
-echo -e "${RED}║ THIS SCRIPT WILL PERMANENTLY ERASE DATA ON THE TARGET PARTITION.   ║${NC}"
-echo -e "${RED}╚════════════════════════════════════════════════════════════════════╝${NC}"
-echo ""
-sleep 1
+echo -e "${PURPLE}"
+cat << "EOF"
+██╗    ██╗ █████╗ ██╗   ██╗██╗   ██╗
+██║    ██║██╔══██╗██║   ██║╚██╗ ██╔╝
+██║ █╗ ██║███████║██║   ██║ ╚████╔╝ 
+██║███╗██║██╔══██║╚██╗ ██╔╝  ╚██╔╝  
+╚███╔███╔╝██║  ██║ ╚████╔╝    ██║   
+ ╚══╝╚══╝ ╚═╝  ╚═╝  ╚═══╝     ╚═╝   
 
+               WAVY   OS
+EOF
+echo -e "${RESET}"
+echo -e "${GRAY}        Immutable Linux for Apple Silicon${RESET}"
+echo ""
+
+# --- LIABILITY WAIVER ---
 if [ "$1" != "--live" ]; then
-    echo -e "Usage: sudo bash $0 --live"
+    echo -e "${RED}⚠️  Usage: sudo bash $0 --live${RESET}"
     exit 1
 fi
 
-echo -e "${BLUE}🌊 WavyOS Partition Installer${NC}"
-echo "------------------------------"
-
-# --- PARTITION SELECTION ---
-echo -e "${YELLOW}Available Partitions:${NC}"
-lsblk -o NAME,SIZE,FSTYPE,UUID,MOUNTPOINT,PARTTYPE | grep -v "loop"
-
-echo ""
-read -p "Enter Target Partition to WIPE (e.g. /dev/nvme0n1p8): " TARGET
+echo -e "${CYAN}Enter Target Partition to WIPE (e.g. /dev/nvme0n1p8):${RESET}"
+read -p "> " TARGET
 
 # Safety Checks
 if [ -z "$TARGET" ]; then echo "❌ No target specified."; exit 1; fi
 if [ "$TARGET" == "$(findmnt / -o SOURCE -n)" ]; then echo "❌ Cannot overwrite active root."; exit 1; fi
 
-# --- EFI DETECTION (Smart) ---
-echo "🔍 Detecting EFI Partition..."
-# Try to find a partition with the EFI GUID type
+# --- EFI DETECTION ---
+echo -e "${GRAY}🔍 Detecting EFI Partition...${RESET}"
 DETECTED_EFI=$(lsblk -o NAME,PARTTYPE -rn | grep "c12a7328-f81f-11d2-ba4b-00a0c93ec93b" | head -n1 | awk '{print "/dev/"$1}')
 
 if [ -n "$DETECTED_EFI" ]; then
-    echo -e "Found candidate EFI partition: ${GREEN}$DETECTED_EFI${NC}"
-    read -p "Use this EFI partition? (y/n): " USE_EFI
+    echo -e "Found EFI: ${PURPLE}$DETECTED_EFI${RESET}"
+    echo -e "${CYAN}Use this EFI partition? (y/n):${RESET}"
+    read -p "> " USE_EFI
     if [[ "$USE_EFI" =~ ^[Yy]$ ]]; then
         EFI_PART="$DETECTED_EFI"
     else
-        read -p "Enter EFI Partition manually (e.g. /dev/nvme0n1p1): " EFI_PART
+        echo -e "${CYAN}Enter EFI Partition manually:${RESET}"
+        read -p "> " EFI_PART
     fi
 else
-    echo -e "${YELLOW}⚠️  Could not auto-detect EFI partition.${NC}"
-    read -p "Enter EFI Partition manually (e.g. /dev/nvme0n1p1): " EFI_PART
+    echo -e "${YELLOW}⚠️  Could not auto-detect EFI.${RESET}"
+    echo -e "${CYAN}Enter EFI Partition manually:${RESET}"
+    read -p "> " EFI_PART
 fi
 
 if [ ! -b "$EFI_PART" ]; then echo "❌ Invalid EFI partition."; exit 1; fi
 
-
 # --- FINAL CONFIRMATION ---
 echo ""
-echo -e "${RED}--------------------------------------------------${NC}"
-echo -e "TARGET (WIPE):  ${RED}$TARGET${NC}"
-echo -e "EFI (BOOT):     ${GREEN}$EFI_PART${NC}"
-echo -e "IMAGE:          $IMAGE"
-echo -e "${RED}--------------------------------------------------${NC}"
-read -p "Type 'DESTROY' to confirm data loss and proceed: " CONFIRM
+echo -e "${RED}WARNING: This will wipe all data on ${BOLD}$TARGET${RESET}${RED}.${RESET}"
+echo "Image: $IMAGE"
+echo ""
+echo -e "${CYAN}Type 'DESTROY' to confirm:${RESET}"
+read -p "> " CONFIRM
 if [ "$CONFIRM" != "DESTROY" ]; then echo "Aborted."; exit 1; fi
 
 # --- EXECUTION ---
-echo "🔨 Formatting $TARGET (Btrfs)..."
-mkfs.btrfs -f -L "WavyOS" "$TARGET"
+echo -e "${GRAY}Formatting $TARGET...${RESET}"
+mkfs.btrfs -f -L \"WavyOS\" \"$TARGET\" > /dev/null
 
-echo "📂 Mounting..."
+echo -e "${GRAY}Mounting...${RESET}"
 mkdir -p "$MOUNT_DIR"
 mountpoint -q "$MOUNT_DIR" || mount "$TARGET" "$MOUNT_DIR"
-
 mkdir -p "$MOUNT_DIR/boot/efi"
 mountpoint -q "$MOUNT_DIR/boot/efi" || mount "$EFI_PART" "$MOUNT_DIR/boot/efi"
 
-echo "🚀 Installing OS Image (bootc)..."
-# We use the 'bootc install' command inside the container to write to disk
+echo -e "${PURPLE}Initializing Portal (Installing OS)...${RESET}"
 podman run --rm --privileged --pid=host --security-opt label=type:unconfined_t \
     -v /dev:/dev -v "$MOUNT_DIR":/target \
     "$IMAGE" \
     bootc install to-filesystem --disable-selinux --skip-finalize --replace-bootloader /target
 
-# --- FSTAB GENERATION ---
-echo "📝 Generating fstab..."
+echo -e "${GRAY}Configuring system...${RESET}"
 UUID=$(blkid -s UUID -o value "$TARGET")
 EFI_UUID=$(blkid -s UUID -o value "$EFI_PART")
 mkdir -p "$MOUNT_DIR/etc"
@@ -118,16 +114,13 @@ UUID=$UUID / btrfs subvol=root,compress=zstd:1 0 0
 UUID=$EFI_UUID /boot/efi vfat defaults 0 2
 FSTAB
 
-# --- BRANDING ---
-echo "🎨 Branding Boot Menu..."
-# Search for the BLS config file and swap names to "WavyOS"
+# Branding
 if [ -d "$MOUNT_DIR/boot/loader/entries" ]; then
     find "$MOUNT_DIR/boot/loader/entries" -name "*.conf" -exec sed -i 's/Silverblue/WavyOS/g' {} +
     find "$MOUNT_DIR/boot/loader/entries" -name "*.conf" -exec sed -i 's/Fedora Linux/WavyOS/g' {} +
-else
-    echo "⚠️  Warning: Boot loader entries not found. Skipping branding."
 fi
 
-echo -e "${GREEN}✅ Install Complete.${NC}"
-echo "   Target UUID: $UUID"
-# Trap will handle unmounting
+# --- SUCCESS ---
+echo ""
+echo -e "${YELLOW}Success! Reboot now.${RESET}"
+echo -e "${YELLOW}System hydrated. Welcome to the new frequency.${RESET}"
