@@ -17,7 +17,6 @@ jobs:
           echo "📝 Generating Containerfile..."
           # Standard generation. NO SED. NO EDITING.
           docker run --rm \
-            --entrypoint="" \
             -v ${{ github.workspace }}:/app \
             -w /app \
             ghcr.io/blue-build/cli:latest \
