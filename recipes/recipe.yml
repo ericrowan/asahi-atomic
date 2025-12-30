@@ -4,13 +4,11 @@ base-image: quay.io/fedora-asahi-remix-atomic-desktops/silverblue
 image-version: 42
 
 modules:
-  # 1. System Overlays
   - type: files
     files:
       - source: system
         destination: /
 
-  # 2. Core Infrastructure (RPMs)
   - type: rpm-ostree
     install:
       - fish
@@ -23,27 +21,59 @@ modules:
       - firefox
       - firefox-langpacks
 
-  # 3. User Space Apps (Flatpaks)
+  # FLATPAKS V2 MIGRATION
   - type: default-flatpaks
     notify: true
-    system:
-      repo-url: https://dl.flathub.org/repo/flathub.flatpakrepo
-      repo-name: flathub
-      repo-title: "Flathub (System)"
-      install:
-        # --- Browsers ---
-        - org.mozilla.firefox
+    configurations:
+      - scope: system
+        repo:
+          url: https://dl.flathub.org/repo/flathub.flatpakrepo
+          name: flathub
+          title: "Flathub (System)"
+        install:
+          # --- Browsers ---
+          - org.mozilla.firefox
+          - org.chromium.Chromium
 
-        # --- System & Management ---
-        - io.github.flattool.Warehouse
-        - io.github.kolunmi.Bazaar
-        - com.github.tchx84.Flatseal
-        - io.missioncenter.MissionCenter
+          # --- System & Management ---
+          - io.github.flattool.Warehouse
+          - io.github.kolunmi.Bazaar
+          - com.github.tchx84.Flatseal
+          - com.mattjakeman.ExtensionManager
+          - io.missioncenter.MissionCenter
+          - org.gnome.baobab
+          - org.gnome.dconf-editor
+          - org.gnome.Logs
+          - org.gnome.Calculator
+          - org.gnome.Calendar
+          - org.gnome.Characters
+          - org.gnome.Connections
 
-        # --- Development ---
-        - dev.zed.Zed
+          # --- Development ---
+          - dev.zed.Zed
+          - com.github.marhkb.Pods
+          - org.gnome.Boxes
+          - org.gnome.Builder
+          - re.sonny.Workbench
+          - app.drey.Warp
 
-  # 4. Fonts
+          # --- Creative & Media ---
+          - io.bassi.Amberol
+          - de.haeckerfelix.Shortwave
+          - org.gnome.Podcast
+          - io.github.celluloid_player.Celluloid
+          - org.gnome.Loupe
+          - org.gnome.Papers
+          - com.github.wwmm.easyeffects
+
+          # --- Gaming ---
+          - org.gnome.Games
+          - net.retrodeck.retrodeck
+
+          # --- Productivity ---
+          - org.gnome.World.PikaBackup
+          - app.getapostrophe.Apostrophe
+
   - type: fonts
     fonts:
       nerd-fonts:
@@ -52,7 +82,6 @@ modules:
       google-fonts:
         - Inter
 
-  # 5. Background Services
   - type: systemd
     system:
       enabled:
