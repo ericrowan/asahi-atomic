@@ -18,6 +18,17 @@ push msg="update":
     @sleep 5
     @just watch
 
+# --- VALIDATION ---
+# Validates the recipe against the BlueBuild schema
+validate:
+    @echo "🔍 Validating recipe.yml..."
+    @podman run --rm \
+        -v {{ invocation_directory() }}:/app \
+        -w /app \
+        ghcr.io/blue-build/cli:latest \
+        bluebuild validate recipes/recipe.yml
+    @echo "✅ Recipe is valid."
+
 watch:
     gh run watch $(gh run list --branch {{ branch }} --limit 1 --json databaseId -q '.[0].databaseId') --exit-status
 
