@@ -2,6 +2,12 @@
 [org.gnome.system.location]
 enabled=false
 
-# Optional: Set Dark Mode by default (since we are here)
+# Set Dark Mode by default
 [org.gnome.desktop.interface]
 color-scheme='prefer-dark'
+
+# Disable Software Update Notifications
+[org.gnome.software]
+download-updates=false
+download-updates-notify=false
+check-timestamp=0

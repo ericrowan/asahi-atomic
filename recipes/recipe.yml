@@ -15,7 +15,9 @@ modules:
       - zsh
       - spice-vdagent
       - ptyxis
-      - gnome-console   # Backup terminal
+      - gnome-console
+    remove:
+      - gnome-tour
 
   - type: fonts
     fonts:

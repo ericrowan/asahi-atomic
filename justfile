@@ -21,14 +21,23 @@ watch:
 
 # --- TESTING ---
 test:
-    @echo "🧹 Cleaning up old image..."
-    -podman rmi {{ registry }}/{{ image_name }}:latest 2>/dev/null
-    @echo "⬇️  Pulling latest image..."
+    @echo "🧹 NUCLEAR CLEANUP: Deleting old images and disks..."
+    -rm -rf output/
+    -podman rmi -f {{ registry }}/{{ image_name }}:latest 2>/dev/null
+    -podman image prune -f 2>/dev/null
+    
+    @echo "⬇️  Pulling fresh image..."
     podman pull {{ registry }}/{{ image_name }}:latest
+    
+    @echo "🔍 VERIFYING IMAGE ID:"
+    @podman images --format "table {{.ID}} {{.CreatedSince}}" | grep {{ image_name }} || true
+    
     @echo "🏗️  Building Main VM Disk..."
     just build-vm "{{ registry }}/{{ image_name }}:latest"
-    @echo "💽 Creating Target Disk (for Installer Test)..."
+    
+    @echo "💽 Creating Target Disk..."
     truncate -s 10G output/target-disk.img
+    
     @echo "🚀 Booting..."
     just run-vm
 
@@ -42,6 +51,8 @@ build-vm image:
     DISK_IMG="$OUTPUT_DIR/wavyos-vm.img"
     DISK_SIZE="15G"
 
+    # Ensure clean slate
+    rm -f "$DISK_IMG"
     mkdir -p "$OUTPUT_DIR"
     truncate -s "$DISK_SIZE" "$DISK_IMG"
 
