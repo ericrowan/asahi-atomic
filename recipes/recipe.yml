@@ -60,7 +60,7 @@ modules:
         # --- Media & Gaming ---
         - io.bassi.Amberol
         - de.haeckerfelix.Shortwave
-        - org.gnome.Podcast
+        - org.gnome.Podcasts
         - io.github.celluloid_player.Celluloid
         - com.github.wwmm.easyeffects
         - org.gnome.Games
