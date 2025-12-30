@@ -13,7 +13,8 @@ modules:
     install:
       - fish
       - zsh
-      - spice-vdagent  # Copy/Paste support for VM
+      - spice-vdagent
+      - ptyxis          # GNOME Console (Modern Terminal)
 
   - type: fonts
     fonts:
@@ -25,4 +26,4 @@ modules:
     system:
       enabled:
         - rpm-ostreed-automatic.timer
-        # - spice-vdagentd.service  # Usually auto-enabled by package, but we can force if needed
+        - spice-vdagentd.service        # FORCE enable copy/paste daemon
