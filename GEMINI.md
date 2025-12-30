@@ -25,3 +25,12 @@
 *   **Base:** Fedora Silverblue (Asahi Remix).
 *   **Build:** Native ARM64 (`ubuntu-24.04-arm`) via GitHub Actions.
 *   **Apps:** Flatpak First (Warehouse/Bazaar). CLI Tools via Homebrew.
+
+## 📜 MISSION PROTOCOL (HIGHEST PRIORITY)
+1.  **The Source:** Your primary instruction comes from `docs/MISSION.md`.
+2.  **The Loop:**
+    *   Read `docs/MISSION.md`.
+    *   Execute the first unchecked item `[ ]`.
+    *   Update the file to mark it `[x]`.
+    *   Report status.
+3.  **No deviation:** Do not invent tasks not in the Mission file.
