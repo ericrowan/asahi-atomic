@@ -21,7 +21,7 @@ modules:
       - firefox
       - firefox-langpacks
 
-  # FLATPAKS (v1 Syntax - Final Safe List)
+  # FLATPAKS (v1 - Host Verified List)
   - type: default-flatpaks@v1
     notify: true
     system:
@@ -33,37 +33,46 @@ modules:
         - org.mozilla.firefox
         - org.chromium.Chromium
 
-        # --- Productivity & Notes ---
-        - md.obsidian.Obsidian
-        - org.gnome.Papers
-
-        # --- Development ---
-        - dev.zed.Zed
-        - org.gnome.Builder
-        - re.sonny.Workbench
+        # --- System & Management ---
         - io.github.flattool.Warehouse
         - io.github.kolunmi.Bazaar
         - com.github.tchx84.Flatseal
-        - io.missioncenter.MissionCenter
-        - org.gnome.baobab
-        - org.gnome.Connections
-
-        # --- GNOME Core / Utilities ---
         - com.mattjakeman.ExtensionManager
+        - io.missioncenter.MissionCenter
+        - org.gnome.baobab                  # Disk Usage
+        - org.gnome.Logs
         - org.gnome.Calculator
         - org.gnome.Calendar
         - org.gnome.Characters
-        - org.gnome.Logs
-        - org.gnome.Loupe
-        - app.drey.Warp
+        - org.gnome.Connections
+        - io.github.giantpinkrobots.flatsweep
 
-        # --- Media & Gaming ---
+        # --- Development ---
+        - dev.zed.Zed
+        - com.github.marhkb.Pods
+        - org.gnome.Boxes
+        - org.gnome.Builder
+        - re.sonny.Workbench
+        - app.drey.Warp
+        - com.raggesilver.BlackBox
+        - com.vscodium.codium
+
+        # --- Productivity ---
+        - md.obsidian.Obsidian
+        - org.gnome.Papers                  # PDFs
+        - org.gnome.World.PikaBackup
+        - dev.geopjr.Tuba                   # Mastodon
+        - com.ranfdev.DistroShelf           # Android Bridge
+
+        # --- Creative & Media ---
         - io.bassi.Amberol
         - de.haeckerfelix.Shortwave
         - org.gnome.Podcasts
         - io.github.celluloid_player.Celluloid
-        - com.github.wwmm.easyeffects
-        - org.gnome.Games
+        - org.gnome.Loupe                   # Image Viewer
+        - com.github.wwmm.easyeffects       # Audio EQ
+
+        # Removed: Spotube, Steam, Games, Audio Plugins (Auto-dependency)
 
   # FONTS (Monaspace Nerd Font)
   - type: fonts
