@@ -1,0 +1,7 @@
+# Disable Location Services by default
+[org.gnome.system.location]
+enabled=false
+
+# Optional: Set Dark Mode by default (since we are here)
+[org.gnome.desktop.interface]
+color-scheme='prefer-dark'

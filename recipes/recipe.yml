@@ -14,7 +14,8 @@ modules:
       - fish
       - zsh
       - spice-vdagent
-      - ptyxis          # GNOME Console (Modern Terminal)
+      - ptyxis
+      - gnome-console   # Backup terminal
 
   - type: fonts
     fonts:
@@ -26,4 +27,4 @@ modules:
     system:
       enabled:
         - rpm-ostreed-automatic.timer
-        - spice-vdagentd.service        # FORCE enable copy/paste daemon
+        - spice-vdagentd.service
