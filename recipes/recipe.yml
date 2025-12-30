@@ -21,28 +21,18 @@ modules:
       - firefox
       - firefox-langpacks
 
-  # FLATPAKS V2 SYNTAX (Core Only)
-  - type: default-flatpaks
+  # FLATPAKS (Pinned to v1, Safety List)
+  - type: default-flatpaks@v1
     notify: true
-    configurations:
-      - scope: system
-        repo:
-          url: https://dl.flathub.org/repo/flathub.flatpakrepo
-          name: flathub
-          title: "Flathub (System)"
-        install:
-          # --- Core Browsers ---
-          - org.mozilla.firefox
-          - org.chromium.Chromium
-
-          # --- System Tools ---
-          - io.github.flattool.Warehouse
-          - io.github.kolunmi.Bazaar
-          - com.github.tchx84.Flatseal
-          - io.missioncenter.MissionCenter
-
-          # --- Dev ---
-          - dev.zed.Zed
+    system:
+      repo-url: https://dl.flathub.org/repo/flathub.flatpakrepo
+      repo-name: flathub
+      repo-title: "Flathub (System)"
+      install:
+        - org.mozilla.firefox
+        - io.github.flattool.Warehouse
+        - com.github.tchx84.Flatseal
+        - io.bassi.Amberol
 
   - type: fonts
     fonts:
