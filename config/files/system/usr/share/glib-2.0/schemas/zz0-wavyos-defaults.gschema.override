@@ -1,8 +1,5 @@
 [org.gnome.desktop.interface]
 color-scheme='prefer-dark'
-font-name='Inter Variable 11'
-monospace-font-name='Monaspace Argon 10'
-document-font-name='Inter Variable 11'
 
 [org.gnome.desktop.peripherals.touchpad]
 natural-scroll=true
