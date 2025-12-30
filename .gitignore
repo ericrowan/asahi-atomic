@@ -8,3 +8,4 @@ tmp/
 .ai/audits/
 cosign.key
 .scripts
+notes/
