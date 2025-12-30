@@ -21,7 +21,7 @@ modules:
       - firefox
       - firefox-langpacks
 
-  # FLATPAKS (v1 Syntax - Expanded)
+  # FLATPAKS (v1 Syntax - Final Safe List)
   - type: default-flatpaks@v1
     notify: true
     system:
@@ -34,30 +34,36 @@ modules:
         - org.chromium.Chromium
 
         # --- Productivity & Notes ---
-        - md.obsidian.Obsidian              # Added: Obsidian
-        - app.getapostrophe.Apostrophe      # Markdown Editor
-        - org.gnome.Papers                  # PDFs
+        - md.obsidian.Obsidian
+        - org.gnome.Papers
 
         # --- Development ---
-        - dev.zed.Zed                       # Added: Zed (ARM64 Check)
+        - dev.zed.Zed
+        - org.gnome.Builder
+        - re.sonny.Workbench
         - io.github.flattool.Warehouse
         - io.github.kolunmi.Bazaar
         - com.github.tchx84.Flatseal
         - io.missioncenter.MissionCenter
-        - org.gnome.baobab                  # Disk Usage
-        - org.gnome.Connections             # VNC/RDP
+        - org.gnome.baobab
+        - org.gnome.Connections
 
-        # --- GNOME Core (Replacements) ---
+        # --- GNOME Core / Utilities ---
+        - com.mattjakeman.ExtensionManager
         - org.gnome.Calculator
         - org.gnome.Calendar
         - org.gnome.Characters
         - org.gnome.Logs
-        - org.gnome.Loupe                   # Image Viewer
+        - org.gnome.Loupe
+        - app.drey.Warp
 
-        # --- Media ---
+        # --- Media & Gaming ---
         - io.bassi.Amberol
+        - de.haeckerfelix.Shortwave
+        - org.gnome.Podcast
         - io.github.celluloid_player.Celluloid
         - com.github.wwmm.easyeffects
+        - org.gnome.Games
 
   # FONTS (Monaspace Nerd Font)
   - type: fonts
