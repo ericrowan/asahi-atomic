@@ -153,8 +153,4 @@ run-vm:
         -device virtio-gpu-pci,xres=1920,yres=1080 \
         -display gtk,gl=off \
         -device qemu-xhci -device usb-kbd -device usb-tablet \
-        -device virtio-serial-pci \
-        -spice port=5930,disable-ticketing=on \
-        -device virtserialport,chardev=spicechannel0,name=com.redhat.spice.0 \
-        -chardev spicevmc,id=spicechannel0,name=vdagent \
         || true

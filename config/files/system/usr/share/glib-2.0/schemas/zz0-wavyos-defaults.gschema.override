@@ -1,12 +1,13 @@
-# Disable Location Services by default
-[org.gnome.system.location]
-enabled=false
-
-# Set Dark Mode by default
 [org.gnome.desktop.interface]
 color-scheme='prefer-dark'
 
-# Disable Software Update Notifications
+# Strict Privacy (Location OFF)
+[org.gnome.system.location]
+enabled=false
+[org.gnome.desktop.privacy]
+location-enabled=false
+
+# Kill Software Nags
 [org.gnome.software]
 download-updates=false
 download-updates-notify=false

@@ -13,11 +13,10 @@ modules:
     install:
       - fish
       - zsh
-      - spice-vdagent
       - ptyxis
-      - gnome-console
     remove:
       - gnome-tour
+      - gnome-software
 
   - type: fonts
     fonts:
@@ -29,4 +28,3 @@ modules:
     system:
       enabled:
         - rpm-ostreed-automatic.timer
-        - spice-vdagentd.service
