@@ -1,7 +1,5 @@
 # 🌊 WavyOS Command Center
-
 set shell := ["bash", "-c"]
-
 image_name := "wavyos"
 registry := "ghcr.io/ericrowan"
 branch := `git rev-parse --abbrev-ref HEAD`
@@ -18,70 +16,62 @@ push msg="update":
     @sleep 5
     @just watch
 
-# --- VALIDATION ---
-# Validates the recipe against the BlueBuild schema
+watch:
+    gh run watch $(gh run list --branch {{branch}} --limit 1 --json databaseId -q '.[0].databaseId') --exit-status
+
+# --- GENERATION & VALIDATION ---
 validate:
     @echo "🔍 Validating recipe.yml..."
+    @# The :Z flag is critical for SELinux on Fedora
     @podman run --rm \
-        -v {{ invocation_directory() }}:/app \
+        -v {{ invocation_directory() }}:/app:Z \
         -w /app \
         ghcr.io/blue-build/cli:latest \
         bluebuild validate recipes/recipe.yml
     @echo "✅ Recipe is valid."
 
-watch:
-    gh run watch $(gh run list --branch {{ branch }} --limit 1 --json databaseId -q '.[0].databaseId') --exit-status
+generate:
+    @echo "🍳 Generating recipe.yml..."
+    @# Reset venv if needed
+    @rm -rf .venv
+    @python3 -m venv .venv
+    @.venv/bin/pip install -q pyyaml
+    @.venv/bin/python3 scripts/generate_recipe.py
+    @echo "🔍 Validating..."
+    @just validate
 
 # --- TESTING ---
 test:
-    @echo "🧹 NUCLEAR CLEANUP: Deleting old images and disks..."
-    sudo rm -rf output/
-
+    @echo "🧹 NUCLEAR CLEANUP..."
+    -rm -rf output/
+    -podman rmi -f {{ registry }}/{{ image_name }}:latest 2>/dev/null
+    
+    @echo "⬇️  Pulling fresh image..."
+    podman pull {{ registry }}/{{ image_name }}:latest
+    
     @echo "🏗️  Building Main VM Disk..."
-    # We pass the image name; build-vm handles the pull (as root) to ensure consistency
     just build-vm "{{ registry }}/{{ image_name }}:latest"
-
+    
     @echo "💽 Creating Target Disk..."
     truncate -s 10G output/target-disk.img
-
+    
     @echo "🚀 Booting..."
     just run-vm
 
 build-vm image:
     #!/bin/bash
     set -e
-    # Self-elevate to root for disk operations
-    if [ "$EUID" -ne 0 ]; then echo "⚠️ Root required for loopback mounting."; exec sudo "$0" "$@"; fi
+    if [ "$EUID" -ne 0 ]; then echo "⚠️ Root required."; exec sudo "$0" "$@"; fi
 
     IMAGE="{{ image }}"
     OUTPUT_DIR="output"
     DISK_IMG="$OUTPUT_DIR/wavyos-vm.img"
     DISK_SIZE="15G"
 
-    echo "🔍 Checking Image Freshness for: $IMAGE"
-    
-    # 1. Get Local Hash (if exists)
-    LOCAL_HASH=$(podman inspect --format '{{{{.Digest}}}}' "$IMAGE" 2>/dev/null || echo "none")
-    
-    # 2. Force Pull (Ensures we check the registry)
-    echo "⬇️  Pulling latest manifest..."
-    podman pull "$IMAGE"
-    
-    # 3. Get New Hash
-    NEW_HASH=$(podman inspect --format '{{{{.Digest}}}}' "$IMAGE")
-
-    if [ "$LOCAL_HASH" != "$NEW_HASH" ]; then
-        echo "✅ UPDATE DETECTED: $LOCAL_HASH -> $NEW_HASH"
-    else
-        echo "✅ Image is up-to-date ($NEW_HASH)"
-    fi
-
-    # Ensure clean slate for the file itself
     rm -f "$DISK_IMG"
     mkdir -p "$OUTPUT_DIR"
     truncate -s "$DISK_SIZE" "$DISK_IMG"
 
-    echo "💿 Partitioning Disk..."
     sfdisk "$DISK_IMG" > /dev/null <<EOF
     label: gpt
     , 500M, U
@@ -89,10 +79,7 @@ build-vm image:
     EOF
 
     LOOP=$(losetup -P --find --show "$DISK_IMG")
-    
-    # Cleanup Trap
     function cleanup {
-        echo "🧹 Cleaning up loop devices..."
         mountpoint -q /mnt/wavy_vm/boot/efi && umount /mnt/wavy_vm/boot/efi
         mountpoint -q /mnt/wavy_vm && umount /mnt/wavy_vm
         losetup -d "$LOOP" 2>/dev/null || true
@@ -107,8 +94,7 @@ build-vm image:
     mkdir -p /mnt/wavy_vm/boot/efi
     mount "${LOOP}p1" /mnt/wavy_vm/boot/efi
 
-    echo "🚀 Installing OS to Disk (via bootc)..."
-    # IMPORTANT: usage of the EXACT image hash or name we just pulled
+    echo "🚀 Installing OS..."
     podman run --rm --privileged --pid=host --security-opt label=type:unconfined_t \
         -v /dev:/dev -v /mnt/wavy_vm:/target \
         "$IMAGE" \
@@ -117,45 +103,34 @@ build-vm image:
             grub2-install --force --target=arm64-efi --efi-directory=/target/boot/efi --boot-directory=/target/boot --removable --recheck /dev/loop0
         "
 
-    # Post-Install Fixes
-    echo "🔧 Applying Bootloader Fixes..."
     sed -i 's/Fedora Linux/WavyOS/g' /mnt/wavy_vm/boot/loader/entries/*.conf || true
-
+    
     mount -o remount,rw /mnt/wavy_vm || true
     mkdir -p /mnt/wavy_vm/boot/grub2 /mnt/wavy_vm/etc
-    
     ROOT_UUID=$(blkid -s UUID -o value "${LOOP}p2")
     EFI_UUID=$(blkid -s UUID -o value "${LOOP}p1")
 
-    # GRUB Config
-    cat <<GRUB > /mnt/wavy_vm/boot/grub2/grub.cfg
-    search --no-floppy --fs-uuid --set=root $ROOT_UUID
-    set prefix=(\$root)/boot/grub2
-    insmod blscfg
-    blscfg
-    GRUB
+    echo "search --no-floppy --fs-uuid --set=root $ROOT_UUID" > /mnt/wavy_vm/boot/grub2/grub.cfg
+    echo "set prefix=(\$root)/boot/grub2" >> /mnt/wavy_vm/boot/grub2/grub.cfg
+    echo "insmod blscfg" >> /mnt/wavy_vm/boot/grub2/grub.cfg
+    echo "blscfg" >> /mnt/wavy_vm/boot/grub2/grub.cfg
 
-    # Fstab
-    cat <<FSTAB > /mnt/wavy_vm/etc/fstab
-    UUID=$ROOT_UUID / btrfs subvol=root 0 0
-    UUID=$EFI_UUID /boot/efi vfat defaults 0 2
-    FSTAB
-
-    # Fix permissions for the user who ran sudo
-    if [ -n "$SUDO_USER" ]; then
+    echo "UUID=$ROOT_UUID / btrfs subvol=root 0 0" > /mnt/wavy_vm/etc/fstab
+    echo "UUID=$EFI_UUID /boot/efi vfat defaults 0 2" >> /mnt/wavy_vm/etc/fstab
+    
+    if [ -n "$SUDO_USER" ]; then 
         chown -R "$SUDO_USER:$SUDO_USER" "$OUTPUT_DIR"
     fi
-    echo "✅ VM Disk Ready: $DISK_IMG"
+    echo "✅ VM Ready."
 
 run-vm:
     #!/bin/bash
     DISK_IMG="output/wavyos-vm.img"
     TARGET_IMG="output/target-disk.img"
-
+    
     [ ! -f "$DISK_IMG" ] && echo "❌ Disk not found" && exit 1
-
+    
     echo "🚀 Booting WavyOS..."
-    # Using 'sudo' here to ensure KVM access permissions are fine, though often user is in kvm group
     sudo qemu-system-aarch64 \
         -M virt,accel=kvm -m 6G -smp 4 -cpu host \
         -bios /usr/share/edk2/aarch64/QEMU_EFI.fd \
@@ -164,4 +139,5 @@ run-vm:
         -device virtio-gpu-pci,xres=1920,yres=1080 \
         -display gtk,gl=off \
         -device qemu-xhci -device usb-kbd -device usb-tablet \
+        -device virtio-serial-pci \
         || true

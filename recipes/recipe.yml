@@ -1,94 +1,122 @@
-name: wavyos
-description: Debug Build (Skeleton)
-base-image: quay.io/fedora-asahi-remix-atomic-desktops/silverblue
-image-version: 42
+# 🌊 WavyOS Command Center
+set shell := ["bash", "-c"]
+image_name := "wavyos"
+registry := "ghcr.io/ericrowan"
+branch := `git rev-parse --abbrev-ref HEAD`
 
-modules:
-  - type: files
-    files:
-      - source: system
-        destination: /
+default:
+    @just --list
 
-  - type: rpm-ostree
-    install:
-      - fish
-      - zsh
-      - ptyxis
-      - gnome-tweaks
-      - steam-devices
-    remove:
-      - gnome-tour
-      - firefox
-      - firefox-langpacks
+# --- DEVELOPMENT ---
+push msg="update":
+    git add .
+    git commit -m "{{ msg }}" || echo "⚠️ Nothing to commit..."
+    git push
+    @echo "⏳ Waiting for GitHub..."
+    @sleep 5
+    @just watch
 
-  # FLATPAKS (v1 - Host Verified List)
-  - type: default-flatpaks@v1
-    notify: true
-    system:
-      repo-url: https://dl.flathub.org/repo/flathub.flatpakrepo
-      repo-name: flathub
-      repo-title: "Flathub (System)"
-      install:
-        # --- Core Browsers ---
-        - org.mozilla.firefox
-        - org.chromium.Chromium
+watch:
+    gh run watch $(gh run list --branch {{branch}} --limit 1 --json databaseId -q '.[0].databaseId') --exit-status
 
-        # --- System & Management ---
-        - io.github.flattool.Warehouse
-        - io.github.kolunmi.Bazaar
-        - com.github.tchx84.Flatseal
-        - com.mattjakeman.ExtensionManager
-        - io.missioncenter.MissionCenter
-        - org.gnome.baobab                  # Disk Usage
-        - org.gnome.Logs
-        - org.gnome.Calculator
-        - org.gnome.Calendar
-        - org.gnome.Characters
-        - org.gnome.Connections
-        - io.github.giantpinkrobots.flatsweep
+# --- TESTING ---
+test:
+    @echo "🧹 NUCLEAR CLEANUP..."
+    -rm -rf output/
+    -podman rmi -f {{ registry }}/{{ image_name }}:latest 2>/dev/null
 
-        # --- Development ---
-        - dev.zed.Zed
-        - com.github.marhkb.Pods
-        - org.gnome.Boxes
-        - org.gnome.Builder
-        - re.sonny.Workbench
-        - app.drey.Warp
-        - com.raggesilver.BlackBox
-        - com.vscodium.codium
+    @echo "⬇️  Pulling fresh image..."
+    podman pull {{ registry }}/{{ image_name }}:latest
 
-        # --- Productivity ---
-        - md.obsidian.Obsidian
-        - org.gnome.Papers                  # PDFs
-        - org.gnome.World.PikaBackup
-        - dev.geopjr.Tuba                   # Mastodon
-        - com.ranfdev.DistroShelf           # Android Bridge
+    @echo "🏗️  Building Main VM Disk..."
+    just build-vm "{{ registry }}/{{ image_name }}:latest"
 
-        # --- Creative & Media ---
-        - io.bassi.Amberol
-        - de.haeckerfelix.Shortwave
-        - org.gnome.Podcasts
-        - io.github.celluloid_player.Celluloid
-        - org.gnome.Loupe                   # Image Viewer
-        - com.github.wwmm.easyeffects       # Audio EQ
+    @echo "💽 Creating Target Disk..."
+    truncate -s 10G output/target-disk.img
 
-        # Removed: Spotube, Steam, Games, Audio Plugins (Auto-dependency)
+    @echo "🚀 Booting..."
+    just run-vm
 
-  # FONTS (Monaspace Nerd Font)
-  - type: fonts
-    fonts:
-      nerd-fonts:
-        - JetBrainsMono
-        - FiraCode
-      google-fonts:
-        - Inter
-        - Roboto
-        - Open Sans
-      url-fonts:
-        - name: Monaspace
-          url: https://github.com/githubnext/monaspace/releases/download/v1.301/monaspace-nerdfonts-v1.301.zip
+build-vm image:
+    #!/bin/bash
+    set -e
+    if [ "$EUID" -ne 0 ]; then echo "⚠️ Root required."; exec sudo "$0" "$@"; fi
 
-  - type: systemd
-    system:
-      enabled:
-        - rpm-ostreed-automatic.timer
+    IMAGE="{{ image }}"
+    OUTPUT_DIR="output"
+    DISK_IMG="$OUTPUT_DIR/wavyos-vm.img"
+    DISK_SIZE="15G"
+
+    rm -f "$DISK_IMG"
+    mkdir -p "$OUTPUT_DIR"
+    truncate -s "$DISK_SIZE" "$DISK_IMG"
+
+    sfdisk "$DISK_IMG" > /dev/null <<EOF
+    label: gpt
+    , 500M, U
+    , , L
+    EOF
+
+    LOOP=$(losetup -P --find --show "$DISK_IMG")
+    function cleanup {
+        mountpoint -q /mnt/wavy_vm/boot/efi && umount /mnt/wavy_vm/boot/efi
+        mountpoint -q /mnt/wavy_vm && umount /mnt/wavy_vm
+        losetup -d "$LOOP" 2>/dev/null || true
+    }
+    trap cleanup EXIT
+
+    mkfs.vfat -n "EFI" "${LOOP}p1" > /dev/null
+    mkfs.btrfs -L "WavyOS" -f "${LOOP}p2" > /dev/null
+
+    mkdir -p /mnt/wavy_vm
+    mount "${LOOP}p2" /mnt/wavy_vm
+    mkdir -p /mnt/wavy_vm/boot/efi
+    mount "${LOOP}p1" /mnt/wavy_vm/boot/efi
+
+    echo "🚀 Installing OS..."
+    podman run --rm --privileged --pid=host --security-opt label=type:unconfined_t \
+        -v /dev:/dev -v /mnt/wavy_vm:/target \
+        "$IMAGE" \
+        /bin/bash -c "
+            bootc install to-filesystem --disable-selinux --skip-finalize /target && \
+            grub2-install --force --target=arm64-efi --efi-directory=/target/boot/efi --boot-directory=/target/boot --removable --recheck /dev/loop0
+        "
+
+    sed -i 's/Fedora Linux/WavyOS/g' /mnt/wavy_vm/boot/loader/entries/*.conf || true
+
+    mount -o remount,rw /mnt/wavy_vm || true
+    mkdir -p /mnt/wavy_vm/boot/grub2 /mnt/wavy_vm/etc
+    ROOT_UUID=$(blkid -s UUID -o value "${LOOP}p2")
+    EFI_UUID=$(blkid -s UUID -o value "${LOOP}p1")
+
+    echo "search --no-floppy --fs-uuid --set=root $ROOT_UUID" > /mnt/wavy_vm/boot/grub2/grub.cfg
+    echo "set prefix=(\$root)/boot/grub2" >> /mnt/wavy_vm/boot/grub2/grub.cfg
+    echo "insmod blscfg" >> /mnt/wavy_vm/boot/grub2/grub.cfg
+    echo "blscfg" >> /mnt/wavy_vm/boot/grub2/grub.cfg
+
+    echo "UUID=$ROOT_UUID / btrfs subvol=root 0 0" > /mnt/wavy_vm/etc/fstab
+    echo "UUID=$EFI_UUID /boot/efi vfat defaults 0 2" >> /mnt/wavy_vm/etc/fstab
+
+    if [ -n "$SUDO_USER" ]; then
+        chown -R "$SUDO_USER:$SUDO_USER" "$OUTPUT_DIR"
+    fi
+    echo "✅ VM Ready."
+
+run-vm:
+    #!/bin/bash
+    DISK_IMG="output/wavyos-vm.img"
+    TARGET_IMG="output/target-disk.img"
+
+    [ ! -f "$DISK_IMG" ] && echo "❌ Disk not found" && exit 1
+
+    echo "🚀 Booting WavyOS..."
+    sudo qemu-system-aarch64 \
+        -M virt,accel=kvm -m 6G -smp 4 -cpu host \
+        -bios /usr/share/edk2/aarch64/QEMU_EFI.fd \
+        -drive format=raw,file="$DISK_IMG",if=virtio \
+        -drive format=raw,file="$TARGET_IMG",if=virtio \
+        -device virtio-gpu-pci,xres=1920,yres=1080 \
+        -display gtk,gl=off \
+        -device qemu-xhci -device usb-kbd -device usb-tablet \
+        -device virtio-serial-pci \
+        || true
