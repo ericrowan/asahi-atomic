@@ -1,14 +1,23 @@
 [org.gnome.desktop.interface]
 color-scheme='prefer-dark'
+font-name='Inter Variable 11'
+monospace-font-name='Monaspace Argon 10'
+document-font-name='Inter Variable 11'
 
-# Strict Privacy (Location OFF)
+[org.gnome.desktop.peripherals.touchpad]
+natural-scroll=true
+tap-to-click=true
+
 [org.gnome.system.location]
 enabled=false
+
 [org.gnome.desktop.privacy]
 location-enabled=false
 
-# Kill Software Nags
 [org.gnome.software]
 download-updates=false
 download-updates-notify=false
 check-timestamp=0
+
+[org.gnome.mutter]
+experimental-features=['scale-monitor-framebuffer']
