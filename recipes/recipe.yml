@@ -20,7 +20,6 @@ modules:
       - steam-devices
     remove:
       - gnome-tour
-      - gnome-software
       - firefox
       - firefox-langpacks
 
