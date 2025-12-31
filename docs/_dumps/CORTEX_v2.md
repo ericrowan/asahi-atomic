@@ -610,3 +610,508 @@ RUN rm -rf /tmp/* /var/tmp/*
 
 
 ---
+
+Using the new EXTRACTION.md prompt:
+
+**ARCHIVE PROTOCOL INITIATED**
+**Session ID:** WavyOS_Deep_Extraction_001
+**Status:** Dumping Raw Data
+
+---
+
+# 1. THE HARD ASSETS (Visuals, Branding, Copy)
+
+### A. Naming & Identity (Accepted & Rejected)
+
+**Current Codename:** WavyOS
+**Status:** Active Placeholder (likely to change to **Resonance** or **Lumen**).
+
+**The Shortlist (Ranked by Muse):**
+1.  **Resonance:** (Meaning: Natural amplification. Vibe: Systems-aware, harmony.)
+2.  **Lumen:** (Meaning: Unit of light. Vibe: Clarity, illumination, trust.)
+3.  **Mica:** (Meaning: Mineral, layered. Vibe: Organic stratification, Fedora-adjacent.)
+4.  **Radiant:** (Meaning: Warm, premium. Vibe: "Apple from an alternate timeline.")
+5.  **Drift:** (Meaning: Controlled motion. Vibe: Calm, inevitable. *Note: Tech connotation risk.*)
+6.  **TideOS:** (Meaning: Cycles, gravity. Vibe: Reliable.)
+7.  **Horizon:** (Meaning: Edge of perception. Vibe: Expansive.)
+8.  **Spectra:** (Meaning: Range of light. Vibe: Creative/Technical.)
+9.  **Systema:** (Meaning: System 7 echo. Vibe: Academic/Serious.)
+10. **Clarity:** (Meaning: Pure. Vibe: Generic.)
+
+**Rejected / Banned:**
+*   **"Sacred Rebel":** Explicitly banned. Too "woo/cringe."
+*   **FungiOS:** Rejected. Implies rot/mold to average users.
+*   **Religious Alliteration:** Banned.
+*   **"Glass and Aluminum":** Rejected. Too cold/Apple-copycat.
+
+**The "Vibe" Definition (Accepted):**
+*   "Stained glass."
+*   "Breathing organism."
+*   "Subtle fractals."
+*   "Reverberating mountain ridges."
+*   "Gourmet Chef" (Precision, Tweezer placement) vs. "Line Cook" (Slop).
+
+### B. Color Palettes (Hex Codes)
+
+**Palette 1: Wavy (Default / Calm)**
+```css
+--wavy-bg-dark:    #11111b;
+--wavy-bg-light:   #eff1f5;
+--wavy-primary:    #89dceb;
+--wavy-secondary:  #cba6f7;
+--wavy-accent:     #f9e2af;
+--wavy-success:    #a6e3a1;
+--wavy-text-dark:  #1e1e2e;
+--wavy-text-light: #cdd6f4;
+```
+
+**Palette 2: Royal Psychedelic (Deep / Neon)**
+```css
+--royal-bg-dark:   #0f0a1a;
+--royal-primary:   #8b5cf6;
+--royal-neon:      #89dceb;
+--royal-magenta:   #f5c2e7;
+--royal-indigo:    #45475a;
+--royal-text:      #eaeaf0;
+```
+
+**Palette 3: Earth / Desert (Grounded / Warm)**
+```css
+--earth-bg-dark:   #1c1a17;
+--earth-sand:      #f2cdcd;
+--earth-orange:    #fab387;
+--earth-green:     #a6e3a1;
+--earth-redrock:   #eba0ac;
+--earth-twilight:  #6c7086;
+--earth-text:      #f5e0dc;
+```
+
+### C. Typography
+
+**UI Font:** Inter Variable (Humanist, Invisible).
+**Mono Font:** Monaspace Argon (Texture healed, organic tech).
+*   *Note:* User explicitly preferred Argon over Neon/Krypton.
+*   *Asset:* `https://github.com/githubnext/monaspace/releases/download/v1.301/monaspace-nerdfonts-v1.301.zip` (300MB Zip).
+
+### D. UI Copy (Script & Boot)
+
+**The "Portal" Text (First Boot):**
+*Option A (Selected):*
+> **You’ve arrived.**
+> This is a living system — calm on the surface, deep beneath.
+> Nothing here is owned but everything is possible.
+> Begin when you’re ready.
+
+**The Installer ASCII Header:**
+```text
+██╗    ██╗ █████╗ ██╗   ██╗██╗   ██╗
+██║    ██║██╔══██╗██║   ██║╚██╗ ██╔╝
+██║ █╗ ██║███████║██║   ██║ ╚████╔╝ 
+██║███╗██║██╔══██║╚██╗ ██╔╝  ╚██╔╝  
+╚███╔███╔╝██║  ██║ ╚████╔╝    ██║   
+ ╚══╝╚══╝ ╚═╝  ╚═╝  ╚═══╝     ╚═╝   
+
+               W A V Y   O S
+```
+
+**The Installer Messages (Sprinkle, Don't Douse):**
+*   *Prompt:* "Enter Target Partition:" (Standard).
+*   *Warning:* "WARNING: This will wipe all data on the selected partition." (Standard).
+*   *Success:* "System hydrated. Welcome to the new frequency." (The only "Vibe" line).
+
+---
+
+# 2. THE TECHNICAL MANIFESTS (Code & Configs)
+
+### A. The "Gold Master" Recipe (`recipes/recipe.yml`)
+*Status: Validated. v1 Flatpak Syntax. Full App Suite.*
+
+```yaml
+name: wavyos
+description: A polished, immutable Fedora Asahi Remix experience.
+base-image: quay.io/fedora-asahi-remix-atomic-desktops/silverblue
+image-version: 42
+
+modules:
+  - type: files
+    files:
+      - source: system
+        destination: /
+
+  - type: rpm-ostree
+    install:
+      - fish
+      - zsh
+      - ptyxis
+      - gnome-tweaks
+      - steam-devices
+    remove:
+      - gnome-tour
+      - firefox
+      - firefox-langpacks
+
+  - type: default-flatpaks@v1
+    notify: true
+    system:
+      repo-url: https://dl.flathub.org/repo/flathub.flatpakrepo
+      repo-name: flathub
+      repo-title: "Flathub (System)"
+      install:
+        # --- Browsers ---
+        - org.mozilla.firefox
+        - org.chromium.Chromium
+
+        # --- System & Management ---
+        - io.github.flattool.Warehouse
+        - io.github.kolunmi.Bazaar
+        - com.github.tchx84.Flatseal
+        - com.mattjakeman.ExtensionManager
+        - io.missioncenter.MissionCenter
+        - org.gnome.baobab
+        - org.gnome.Logs
+        - org.gnome.Calculator
+        - org.gnome.Calendar
+        - org.gnome.Characters
+        - org.gnome.Connections
+        - io.github.giantpinkrobots.flatsweep
+
+        # --- Development ---
+        - dev.zed.Zed
+        - com.github.marhkb.Pods
+        - org.gnome.Boxes
+        - org.gnome.Builder
+        - re.sonny.Workbench
+        - app.drey.Warp
+        - com.raggesilver.BlackBox
+        - com.vscodium.codium
+
+        # --- Productivity ---
+        - md.obsidian.Obsidian
+        - org.gnome.Papers
+        - org.gnome.World.PikaBackup
+        - dev.geopjr.Tuba
+        - com.ranfdev.DistroShelf
+
+        # --- Creative & Media ---
+        - io.bassi.Amberol
+        - de.haeckerfelix.Shortwave
+        - org.gnome.Podcasts
+        - io.github.celluloid_player.Celluloid
+        - org.gnome.Loupe
+        - com.github.wwmm.easyeffects
+
+  - type: fonts
+    fonts:
+      nerd-fonts:
+        - JetBrainsMono
+        - FiraCode
+      google-fonts:
+        - Inter
+        - Roboto
+        - Open Sans
+      url-fonts:
+        - name: Monaspace
+          url: https://github.com/githubnext/monaspace/releases/download/v1.301/monaspace-nerdfonts-v1.301.zip
+
+  - type: systemd
+    system:
+      enabled:
+        - rpm-ostreed-automatic.timer
+```
+
+### B. The "Nuclear" Justfile
+*Status: Verified. Handles cache clearing and VM bootstrapping.*
+
+```makefile
+# 🌊 WavyOS Command Center
+set shell := ["bash", "-c"]
+image_name := "wavyos"
+registry := "ghcr.io/ericrowan"
+branch := `git rev-parse --abbrev-ref HEAD`
+
+default:
+    @just --list
+
+push msg="update":
+    git add .
+    git commit -m "{{ msg }}" || echo "⚠️ Nothing to commit..."
+    git push
+    @echo "⏳ Waiting for GitHub..."
+    @sleep 5
+    @just watch
+
+watch:
+    gh run watch $(gh run list --branch {{branch}} --limit 1 --json databaseId -q '.[0].databaseId') --exit-status
+
+test:
+    @echo "🧹 NUCLEAR CLEANUP..."
+    -rm -rf output/
+    -podman rmi -f {{ registry }}/{{ image_name }}:latest 2>/dev/null
+    @echo "⬇️  Pulling fresh image..."
+    podman pull {{ registry }}/{{ image_name }}:latest
+    @echo "🏗️  Building Main VM Disk..."
+    just build-vm "{{ registry }}/{{ image_name }}:latest"
+    @echo "💽 Creating Target Disk..."
+    truncate -s 10G output/target-disk.img
+    @echo "🚀 Booting..."
+    just run-vm
+
+build-vm image:
+    #!/bin/bash
+    set -e
+    if [ "$EUID" -ne 0 ]; then echo "⚠️ Root required."; exec sudo "$0" "$@"; fi
+    IMAGE="{{ image }}"
+    OUTPUT_DIR="output"
+    DISK_IMG="$OUTPUT_DIR/wavyos-vm.img"
+    DISK_SIZE="15G"
+    rm -f "$DISK_IMG"
+    mkdir -p "$OUTPUT_DIR"
+    truncate -s "$DISK_SIZE" "$DISK_IMG"
+    sfdisk "$DISK_IMG" > /dev/null <<EOF
+    label: gpt
+    , 500M, U
+    , , L
+    EOF
+    LOOP=$(losetup -P --find --show "$DISK_IMG")
+    function cleanup {
+        mountpoint -q /mnt/wavy_vm/boot/efi && umount /mnt/wavy_vm/boot/efi
+        mountpoint -q /mnt/wavy_vm && umount /mnt/wavy_vm
+        losetup -d "$LOOP" 2>/dev/null || true
+    }
+    trap cleanup EXIT
+    mkfs.vfat -n "EFI" "${LOOP}p1" > /dev/null
+    mkfs.btrfs -L "WavyOS" -f "${LOOP}p2" > /dev/null
+    mkdir -p /mnt/wavy_vm
+    mount "${LOOP}p2" /mnt/wavy_vm
+    mkdir -p /mnt/wavy_vm/boot/efi
+    mount "${LOOP}p1" /mnt/wavy_vm/boot/efi
+    echo "🚀 Installing OS..."
+    podman run --rm --privileged --pid=host --security-opt label=type:unconfined_t \
+        -v /dev:/dev -v /mnt/wavy_vm:/target \
+        "$IMAGE" \
+        /bin/bash -c "
+            bootc install to-filesystem --disable-selinux --skip-finalize /target && \
+            grub2-install --force --target=arm64-efi --efi-directory=/target/boot/efi --boot-directory=/target/boot --removable --recheck /dev/loop0
+        "
+    sed -i 's/Fedora Linux/WavyOS/g' /mnt/wavy_vm/boot/loader/entries/*.conf || true
+    mount -o remount,rw /mnt/wavy_vm || true
+    mkdir -p /mnt/wavy_vm/boot/grub2 /mnt/wavy_vm/etc
+    ROOT_UUID=$(blkid -s UUID -o value "${LOOP}p2")
+    EFI_UUID=$(blkid -s UUID -o value "${LOOP}p1")
+    echo "search --no-floppy --fs-uuid --set=root $ROOT_UUID" > /mnt/wavy_vm/boot/grub2/grub.cfg
+    echo "set prefix=(\$root)/boot/grub2" >> /mnt/wavy_vm/boot/grub2/grub.cfg
+    echo "insmod blscfg" >> /mnt/wavy_vm/boot/grub2/grub.cfg
+    echo "blscfg" >> /mnt/wavy_vm/boot/grub2/grub.cfg
+    echo "UUID=$ROOT_UUID / btrfs subvol=root 0 0" > /mnt/wavy_vm/etc/fstab
+    echo "UUID=$EFI_UUID /boot/efi vfat defaults 0 2" >> /mnt/wavy_vm/etc/fstab
+    if [ -n "$SUDO_USER" ]; then 
+        chown -R "$SUDO_USER:$SUDO_USER" "$OUTPUT_DIR"
+    fi
+    echo "✅ VM Ready."
+
+run-vm:
+    #!/bin/bash
+    DISK_IMG="output/wavyos-vm.img"
+    TARGET_IMG="output/target-disk.img"
+    [ ! -f "$DISK_IMG" ] && echo "❌ Disk not found" && exit 1
+    echo "🚀 Booting WavyOS..."
+    sudo qemu-system-aarch64 \
+        -M virt,accel=kvm -m 6G -smp 4 -cpu host \
+        -bios /usr/share/edk2/aarch64/QEMU_EFI.fd \
+        -drive format=raw,file="$DISK_IMG",if=virtio \
+        -drive format=raw,file="$TARGET_IMG",if=virtio \
+        -device virtio-gpu-pci,xres=1920,yres=1080 \
+        -display gtk,gl=off \
+        -device qemu-xhci -device usb-kbd -device usb-tablet \
+        -device virtio-serial-pci \
+        || true
+```
+
+### C. The Installer (`scripts/install-os.sh`)
+*Status: Verified Hardened v11.*
+
+```bash
+#!/bin/bash
+# ──────────────────────────────────────────────────────────────────────────────
+#  WAVYOS: BARE METAL INSTALLER (v11 - Sacred Rebel)
+# ──────────────────────────────────────────────────────────────────────────────
+# Usage: sudo bash scripts/install-os.sh --live
+
+set -e
+
+# --- COLORS (Catppuccin/Wavy Palette) ---
+RESET="\033[0m"
+BOLD="\033[1m"
+CYAN="\033[36m"     # Prompts
+PURPLE="\033[35m"   # Identity
+YELLOW="\033[33m"   # Success
+RED="\033[31m"      # Danger
+GRAY="\033[90m"     # Info
+
+# --- CONFIGURATION ---
+IMAGE="${IMAGE:-ghcr.io/ericrowan/wavyos:latest}"
+MOUNT_DIR="/mnt/wavy_install"
+
+# --- CLEANUP TRAP ---
+function cleanup {
+    if [ -d "$MOUNT_DIR" ]; then
+        echo -e "${GRAY}🧹 Cleaning up mounts...${RESET}"
+        umount -R "$MOUNT_DIR" 2>/dev/null || true
+    fi
+}
+trap cleanup EXIT
+
+# --- HEADER ---
+clear
+echo -e "${PURPLE}"
+cat << "EOF"
+██╗    ██╗ █████╗ ██╗   ██╗██╗   ██╗
+██║    ██║██╔══██╗██║   ██║╚██╗ ██╔╝
+██║ █╗ ██║███████║██║   ██║ ╚████╔╝ 
+██║███╗██║██╔══██║╚██╗ ██╔╝  ╚██╔╝  
+╚███╔███╔╝██║  ██║ ╚████╔╝    ██║   
+ ╚══╝╚══╝ ╚═╝  ╚═╝  ╚═══╝     ╚═╝   
+
+               W A V Y   O S
+EOF
+echo -e "${RESET}"
+echo -e "${GRAY}        Immutable Linux for Apple Silicon${RESET}"
+echo ""
+
+# --- LIABILITY WAIVER ---
+if [ "$1" != "--live" ]; then
+    echo -e "${RED}⚠️  Usage: sudo bash $0 --live${RESET}"
+    exit 1
+fi
+
+echo -e "${CYAN}Enter Target Partition to WIPE (e.g. /dev/nvme0n1p8):${RESET}"
+read -p "> " TARGET
+
+# Safety Checks
+if [ -z "$TARGET" ]; then echo "❌ No target specified."; exit 1; fi
+if [ "$TARGET" == "$(findmnt / -o SOURCE -n)" ]; then echo "❌ Cannot overwrite active root."; exit 1; fi
+
+# --- EFI DETECTION ---
+echo -e "${GRAY}🔍 Detecting EFI Partition...${RESET}"
+DETECTED_EFI=$(lsblk -o NAME,PARTTYPE -rn | grep "c12a7328-f81f-11d2-ba4b-00a0c93ec93b" | head -n1 | awk '{print "/dev/"$1}')
+
+if [ -n "$DETECTED_EFI" ]; then
+    echo -e "Found EFI: ${PURPLE}$DETECTED_EFI${RESET}"
+    echo -e "${CYAN}Use this EFI partition? (y/n):${RESET}"
+    read -p "> " USE_EFI
+    if [[ "$USE_EFI" =~ ^[Yy]$ ]]; then
+        EFI_PART="$DETECTED_EFI"
+    else
+        echo -e "${CYAN}Enter EFI Partition manually:${RESET}"
+        read -p "> " EFI_PART
+    fi
+else
+    echo -e "${YELLOW}⚠️  Could not auto-detect EFI.${RESET}"
+    echo -e "${CYAN}Enter EFI Partition manually:${RESET}"
+    read -p "> " EFI_PART
+fi
+
+if [ ! -b "$EFI_PART" ]; then echo "❌ Invalid EFI partition."; exit 1; fi
+
+# --- FINAL CONFIRMATION ---
+echo ""
+echo -e "${RED}WARNING: This will wipe all data on ${BOLD}$TARGET${RESET}${RED}.${RESET}"
+echo -e "Image: $IMAGE"
+echo ""
+echo -e "${CYAN}Type 'DESTROY' to confirm:${RESET}"
+read -p "> " CONFIRM
+if [ "$CONFIRM" != "DESTROY" ]; then echo "Aborted."; exit 1; fi
+
+# --- EXECUTION ---
+echo -e "${GRAY}Formatting $TARGET...${RESET}"
+mkfs.btrfs -f -L "WavyOS" "$TARGET" > /dev/null
+
+echo -e "${GRAY}Mounting...${RESET}"
+mkdir -p "$MOUNT_DIR"
+mountpoint -q "$MOUNT_DIR" || mount "$TARGET" "$MOUNT_DIR"
+mkdir -p "$MOUNT_DIR/boot/efi"
+mountpoint -q "$MOUNT_DIR/boot/efi" || mount "$EFI_PART" "$MOUNT_DIR/boot/efi"
+
+echo -e "${PURPLE}Initializing Portal (Installing OS)...${RESET}"
+podman run --rm --privileged --pid=host --security-opt label=type:unconfined_t \
+    -v /dev:/dev -v "$MOUNT_DIR":/target \
+    "$IMAGE" \
+    bootc install to-filesystem --disable-selinux --skip-finalize --replace-bootloader /target
+
+echo -e "${GRAY}Configuring system...${RESET}"
+UUID=$(blkid -s UUID -o value "$TARGET")
+EFI_UUID=$(blkid -s UUID -o value "$EFI_PART")
+mkdir -p "$MOUNT_DIR/etc"
+cat <<FSTAB > "$MOUNT_DIR/etc/fstab"
+UUID=$UUID / btrfs subvol=root,compress=zstd:1 0 0
+UUID=$EFI_UUID /boot/efi vfat defaults 0 2
+FSTAB
+
+# Branding
+if [ -d "$MOUNT_DIR/boot/loader/entries" ]; then
+    find "$MOUNT_DIR/boot/loader/entries" -name "*.conf" -exec sed -i 's/Silverblue/WavyOS/g' {} +
+    find "$MOUNT_DIR/boot/loader/entries" -name "*.conf" -exec sed -i 's/Fedora Linux/WavyOS/g' {} +
+fi
+
+# --- SUCCESS ---
+echo ""
+echo -e "${YELLOW}Success! Reboot now.${RESET}"
+echo -e "${YELLOW}System hydrated. Welcome to the new frequency.${RESET}"
+```
+
+---
+
+# 3. THE LOGIC & DECISIONS (Why we are here)
+
+### A. Major Pivots & Decisions
+1.  **Architecture:** GitHub Intel Runners (QEMU) -> **Native ARM64 Runners**.
+    *   *Why:* QEMU failed with `os error 22` on filesystem layers. Native runners are the only viable path for Asahi images.
+2.  **Builder Tooling:** `build.sh` (Manual) -> **BlueBuild** -> **BlueBuild CLI (Failed)** -> **Manual Recipe (Current)**.
+    *   *Why:* The "Chef" Python generator failed due to local permission locks and hidden validation errors. We fell back to "Surgeon Mode" (Manual YAML) to ship the Release Candidate.
+    *   *Future:* We will pivot *back* to local BlueBuild CLI scaffolding for the next version to fix the "Ghost Apps" issue.
+3.  **Flatpak Syntax:** v2 (`configurations:`) -> **v1 (`system:`)**.
+    *   *Why:* v2 is cutting edge but strict. It caused build failures. We pinned v1 to guarantee a working image today.
+4.  **App Grid Layout:**
+    *   Implemented via `gschema.override` (`folder-children`). Grouped by: Development, System, Media, Office.
+
+### B. Constraints Identified
+1.  **Atomic/OSTree Limitations:**
+    *   Cannot easily remove core packages (like `gnome-software`) if they are dependencies of the base group. *Workaround: Silence them via dconf.*
+    *   Cannot install x86-only Flatpaks (Steam, Signal) on ARM64 easily. *Workaround: Omit for now, plan for Distrobox later.*
+2.  **VM Testing:**
+    *   Podman caching is aggressive. Requires `rmi -f` to see changes.
+    *   Host <-> VM clipboard requires `spice-vdagent`, but we removed it to simplify the boot chain (VirtIO GPU only).
+
+---
+
+# 4. THE "UNKNOWNS" & GAP ANALYSIS
+
+### A. The "Ghost App" Mystery
+*   **Observation:** Flatpaks installed at build time show up in `flatpak list` but NOT in the GNOME App Grid immediately.
+*   **Hypothesis:** The AppStream metadata is not being regenerated or exported correctly in the OCI image layer.
+*   **Fix Candidate:** A systemd service `wavy-firstboot.service` that runs `flatpak update --appstream` on the first boot.
+
+### B. The Audio "Quantum" Details
+*   **File:** `/etc/pipewire/pipewire.conf.d/99-quantum-fix.conf`
+*   **Content:**
+    ```conf
+    context.properties = {
+        default.clock.min-quantum = 1024
+        default.clock.max-quantum = 2048
+    }
+    ```
+*   **Why:** Prevents crackling/popping on M1 Pro speakers.
+
+### C. The Partitioning Math
+*   **Magic Number:** `56000000` sectors.
+*   **Use Case:** Resizing a 512GB Mac drive to give Linux ~250GB safely.
+
+### D. The "Missing" Apps
+*   **Steam:** Requires `asahi-steam` (RPM) + `muvm`. Not Flatpak compatible on ARM64 yet.
+*   **Signal:** Requires `elagostin/signal-desktop` (COPR) or Distrobox.
+
+### E. The "Symphony" Protocol
+*   **Concept:** Using `docs/MISSION.md` as a state file to coordinate Human/Architect/Engineer.
+*   **Status:** Defined but not fully implemented/stress-tested.
+
+*(End of Extraction. Awaiting "CONTINUE" if more detail is needed.)*

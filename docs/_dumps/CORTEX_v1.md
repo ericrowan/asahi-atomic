@@ -607,3 +607,377 @@ RUN rm -rf /tmp/* /var/tmp/*
 ---
 
 **This is the complete DNA of WavyOS.** If you delete the repo tomorrow, these 4 files + the text lists (`packages.txt`, `flatpaks.txt`) will reconstruct the entire operating system.
+
+---
+
+Using EXTRACTION.md tool: 
+
+**Project Status Block**
+*   **Current Task:** Executing "Total Recall" Forensic Extraction (Cortex v1) - [In Progress]
+*   **Up Next:** Integrating Muse Data (Pending your input)
+*   **On Deck:** Atlas Execution (Restructure)
+*   **Completed:** Received Extraction Protocol
+*   **Goal:** Dump the complete engineering state of this session to ensure zero data loss during migration.
+
+---
+
+It is **Wednesday, December 31, 2025**.
+
+I am executing the **Total Recall** protocol on *this* session (Cortex v1). This is the engineering bedrock.
+
+### 📂 CORTEX_V1_DUMP.md
+
+#### 1. The Hard Assets
+
+**Names & Codestyles:**
+*   **Project Name:** **WavyOS** (Working Title).
+*   **Repo Name:** `asahi-atomic` (Technical/SEO).
+*   **Parent Project:** **Project Mycelium** (FungiOS Phase 3).
+*   **Rejected Names:** DingoOS, lsdOS, GroovyOS, VibeOS.
+*   **Accepted Archetype:** "Knight of Pentacles" (Methodical, Surgeons not Butchers).
+*   **Banned Terms:** "Sacred Rebel" (Too esoteric), "Cyberdeck" (Too hardware-specific), "Atone" (Weird).
+
+**Finalized Script: `Justfile`**
+*(The Single Source of Truth for Build & Maintenance)*
+```makefile
+# 🌊 WavyOS Command Center
+
+# Global Settings
+set shell := ["bash", "-c"]
+
+default:
+    @just --list
+
+# -----------------------------------------------------------------------------
+# 1. DEVELOPMENT WORKFLOW
+# -----------------------------------------------------------------------------
+
+# Build container locally (Run as Root to ensure VM builder can see image)
+build:
+    sudo podman build \
+        --platform linux/arm64 \
+        -f config/Containerfile \
+        -t localhost/asahi-atomic:latest \
+        .
+
+# Lint all scripts
+lint:
+    @echo "🔍 Scanning scripts with ShellCheck..."
+    @if ! command -v shellcheck &> /dev/null; then \
+        echo "⚠️ ShellCheck not found."; \
+        exit 1; \
+    fi
+    @find config/modules -name "*.sh" -print0 | xargs -0 shellcheck -x
+    @echo "✅ Scripts passed."
+
+# Commit and Push (and watch build)
+push msg="update": lint
+    git add .
+    git commit -m "{{ msg }}" || echo "⚠️ Nothing to commit, pushing anyway..."
+    git push
+    just watch
+
+# Watch the latest Build run
+watch:
+    @echo "👀 Waiting for GitHub to start build..."
+    @sleep 5
+    @gh run watch $(gh run list --workflow "Build WavyOS" --limit 1 --json databaseId -q '.[0].databaseId') || echo "⚠️  Could not find a running build."
+
+# 🧠 AI ASSISTANT
+ask prompt:
+    @echo "🤖 Asking Gemini..."
+    @cat .ai/PROJECT_CONTEXT.md | gemini chat "CONTEXT: You are the Project Manager for WavyOS. Use the provided context to answer. \n\n QUESTION: {{prompt}}"
+
+# -----------------------------------------------------------------------------
+# 2. TESTING & VM
+# -----------------------------------------------------------------------------
+
+# Test Cloud Image (Pulls from GHCR)
+test tag="dev":
+    @echo "🧪 Testing Cloud Image: {{ tag }}"
+    just build-vm "ghcr.io/ericrowan/asahi-atomic:{{ tag }}"
+    just run-vm
+
+# Clean test environment
+test-clean tag="dev":
+    sudo podman system reset --force
+    just test {{ tag }}
+
+# [Internal] Build the VM Image
+build-vm image:
+    #!/bin/bash
+    set -ex
+    
+    # Ensure root privileges
+    if [ "$EUID" -ne 0 ]; then
+        echo "⚠️  This recipe requires root privileges for loopback mounting."
+        exec sudo "$0" "$@"
+    fi
+
+    IMAGE="{{ image }}"
+    OUTPUT_DIR="output"
+    DISK_IMG="$OUTPUT_DIR/asahi-atomic-vm.img"
+    DISK_SIZE="15G"
+    
+    echo "─── 🏗️  Building VM Image ($IMAGE) ───"
+    mkdir -p "$OUTPUT_DIR"
+    truncate -s "$DISK_SIZE" "$DISK_IMG"
+    
+    # Partitioning
+    sfdisk "$DISK_IMG" > /dev/null <<EOF
+    label: gpt
+    , 500M, U
+    , , L
+    EOF
+    
+    LOOP=$(losetup -P --find --show "$DISK_IMG")
+    
+    # Robust Cleanup Trap
+    function cleanup {
+        echo "🧹 Cleanup..."
+        mountpoint -q /mnt/asahi_vm/boot/efi && umount /mnt/asahi_vm/boot/efi
+        mountpoint -q /mnt/asahi_vm && umount /mnt/asahi_vm
+        losetup -d "$LOOP" 2>/dev/null || true
+    }
+    trap cleanup EXIT
+    
+    mkfs.vfat "${LOOP}p1" > /dev/null
+    mkfs.btrfs -f "${LOOP}p2" > /dev/null
+    
+    mkdir -p /mnt/asahi_vm
+    mount "${LOOP}p2" /mnt/asahi_vm
+    mkdir -p /mnt/asahi_vm/boot/efi
+    mount "${LOOP}p1" /mnt/asahi_vm/boot/efi
+    
+    echo "🚀 Installing OS..."
+    # ADDED: -e LANG=C.UTF-8 -e LC_ALL=C.UTF-8 to fix locale errors during install
+    podman run --rm --privileged --pid=host --security-opt label=type:unconfined_t \
+        -e LANG=C.UTF-8 -e LC_ALL=C.UTF-8 \
+        -v /dev:/dev -v /mnt/asahi_vm:/target \
+        "$IMAGE" \
+        /bin/bash -c "
+            bootc install to-filesystem --disable-selinux --skip-finalize /target && \
+            echo '🔧 Forcing GRUB...' && \
+            grub2-install --force --target=arm64-efi --efi-directory=/target/boot/efi --boot-directory=/target/boot --removable --recheck /dev/loop0
+        "
+    
+    # FIX: Ensure disk is Writable before config
+    echo "🔧 Remounting Read-Write..."
+    mount -o remount,rw /mnt/asahi_vm || true
+    
+    # Configs
+    mkdir -p /mnt/asahi_vm/boot/grub2 /mnt/asahi_vm/etc
+    ROOT_UUID=$(blkid -s UUID -o value "${LOOP}p2")
+    EFI_UUID=$(blkid -s UUID -o value "${LOOP}p1")
+    
+    echo "search --no-floppy --fs-uuid --set=root $ROOT_UUID" > /mnt/asahi_vm/boot/grub2/grub.cfg
+    echo "set prefix=(\$root)/boot/grub2" >> /mnt/asahi_vm/boot/grub2/grub.cfg
+    echo "insmod blscfg" >> /mnt/asahi_vm/boot/grub2/grub.cfg
+    echo "blscfg" >> /mnt/asahi_vm/boot/grub2/grub.cfg
+    
+    echo "UUID=$ROOT_UUID / btrfs subvol=root 0 0" > /mnt/asahi_vm/etc/fstab
+    echo "UUID=$EFI_UUID /boot/efi vfat defaults 0 2" >> /mnt/asahi_vm/etc/fstab
+    
+    # Branding: Apply to Bootloader Entries
+    sudo sed -i 's/Silverblue/WavyOS/g' /mnt/asahi_vm/boot/loader/entries/*.conf 2>/dev/null || true
+    sudo sed -i 's/Fedora Linux/WavyOS/g' /mnt/asahi_vm/boot/loader/entries/*.conf 2>/dev/null || true
+
+    # Ownership fix for the user who called sudo
+    if [ -n "$SUDO_USER" ]; then chown "$SUDO_USER:$SUDO_USER" "$DISK_IMG"; fi
+    echo "✅ VM Ready."
+
+# [Internal] Run the VM
+run-vm:
+    #!/bin/bash
+    set -e
+    DISK_IMG="output/asahi-atomic-vm.img"
+    [ ! -f "$DISK_IMG" ] && echo "❌ Disk not found" && exit 1
+    
+    SUDO=""
+    [ ! -w /dev/kvm ] && SUDO="sudo"
+    
+    echo "🚀 Booting VM..."
+    $SUDO qemu-system-aarch64 \
+        -M virt,accel=kvm -m 8G -smp 6 -cpu host \
+        -bios /usr/share/edk2/aarch64/QEMU_EFI.fd \
+        -drive format=raw,file="$DISK_IMG" \
+        -device virtio-gpu-pci,xres=1920,yres=1080 \
+        -display gtk,gl=off \
+        -device qemu-xhci -device usb-kbd -device usb-tablet
+```
+
+**Finalized Script: `config/modules/build.sh`**
+*(The Engine Room: Package management + Audio Fixes + Branding)*
+```bash
+#!/bin/bash
+set -ouex pipefail
+
+echo "🚀 Starting System Build Module..."
+
+# 1. ADD EXTERNAL REPOS (Signal)
+curl -o /etc/yum.repos.d/signal.repo https://copr.fedorainfracloud.org/coprs/elagostin/signal-desktop/repo/fedora-rawhide/elagostin-signal-desktop-fedora-rawhide.repo
+
+# 2. PACKAGE LISTS
+BOOTLOADER_PKGS=(
+    "grub2-efi-aa64"
+    "grub2-efi-aa64-modules"
+    "grub2-tools"
+    "shim-aa64"
+    "plymouth-plugin-script"
+)
+
+USER_PKGS=()
+if [ -f "/tmp/config/packages.txt" ]; then
+    # Read file safely, strip comments
+    while IFS= read -r pkg; do
+        [[ "$pkg" =~ ^#.*$ ]] && continue
+        [[ -z "$pkg" ]] && continue
+        USER_PKGS+=("$pkg")
+    done < "/tmp/config/packages.txt"
+fi
+
+REMOVE_PKGS=(
+    "firefox"
+    "firefox-langpacks"
+    "gnome-software"
+    "gnome-software-rpm-ostree"
+    "gnome-tour"
+    "yelp"
+)
+
+# 3. EXECUTE TRANSACTION
+echo "📦 Executing rpm-ostree transaction..."
+# shellcheck disable=SC2046
+rpm-ostree override remove "${REMOVE_PKGS[@]}" \
+    $(printf -- "--install=%s " "${BOOTLOADER_PKGS[@]}") \
+    $(printf -- "--install=%s " "${USER_PKGS[@]}")
+
+# 4. SYSTEM TWEAKS
+echo "⚙️  Applying System Tweaks..."
+
+# Audio Fixes (The Bankstown/J314 Fixes)
+mkdir -p /usr/share/wireplumber/main.lua.d
+cat <<EOF > /usr/share/wireplumber/main.lua.d/51-disable-suspend.lua
+table.insert (default_access.rules, {
+  matches = { { { "node.name", "matches", "alsa_output.*" } } },
+  apply_properties = { ["session.suspend-timeout-seconds"] = 0 },
+})
+EOF
+
+mkdir -p /etc/pipewire/pipewire.conf.d
+cat <<EOF > /etc/pipewire/pipewire.conf.d/99-quantum-fix.conf
+context.properties = {
+    default.clock.min-quantum = 1024
+    default.clock.max-quantum = 2048
+}
+EOF
+
+# Branding (OS Release)
+sed -i 's/Fedora Linux/WavyOS/g' /usr/lib/os-release
+sed -i 's/NAME="Fedora Linux"/NAME="WavyOS"/' /usr/lib/os-release
+sed -i 's/^ID=fedora/ID=wavyos\nID_LIKE=fedora/' /usr/lib/os-release
+
+# Services
+systemctl enable podman.socket
+systemctl enable spice-vdagentd
+
+echo "✅ Build Module Complete."
+```
+
+**Finalized Script: `scripts/setup-user.sh`**
+*(The User Hydration Logic)*
+```bash
+#!/bin/bash
+# ──────────────────────────────────────────────────────────────────────────────
+#  PROJECT CORTEX: USER HYDRATION
+# ──────────────────────────────────────────────────────────────────────────────
+set -e
+echo "💧 Hydrating User Space..."
+
+# Define System Paths
+CONFIG_DIR="/usr/share/asahi-atomic"
+FLATPAK_LIST="$CONFIG_DIR/flatpaks.txt"
+DISTROBOX_INI="$CONFIG_DIR/distrobox.ini"
+
+# 1. PREPARE HOMEBREW
+if [ ! -d "/home/linuxbrew/.linuxbrew" ]; then
+    echo "🍺 Preparing Homebrew..."
+    sudo mkdir -p /var/home/linuxbrew/.linuxbrew
+    sudo chown -R "$(whoami):$(whoami)" /var/home/linuxbrew/.linuxbrew
+    if [ ! -L "/home/linuxbrew" ]; then sudo ln -sf /var/home/linuxbrew /home/linuxbrew; fi
+    
+    echo "   Installing Homebrew..."
+    NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    
+    # Configure Fish path
+    mkdir -p ~/.config/fish
+    echo 'eval (/home/linuxbrew/.linuxbrew/bin/brew shellenv)' >> ~/.config/fish/config.fish
+fi
+
+# 2. INSTALL CLI TOOLS (Brew)
+echo "🍺 Installing CLI Power Tools..."
+eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+
+brew install \
+    bat btop eza fastfetch fzf gh gum htop kitty lazygit mc nvtop p7zip ripgrep starship unrar zoxide
+
+# 3. CONFIGURE SHELL
+if ! grep -q "$(which fish)" /etc/shells; then
+    echo "🐟 Adding Fish to /etc/shells..."
+    command -v fish | sudo tee -a /etc/shells
+fi
+
+# 4. FLATHUB & APPS
+flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+
+if [ -f "$FLATPAK_LIST" ]; then
+    echo "📦 Installing Flatpaks..."
+    mapfile -t APPS < <(grep -vE '^\s*#|^\s*$' "$FLATPAK_LIST")
+    if [ ${#APPS[@]} -gt 0 ]; then flatpak install -y flathub "${APPS[@]}"; fi
+fi
+
+# 5. DISTROBOX
+if [ -f "$DISTROBOX_INI" ]; then
+    echo "📦 Assembling Distroboxes..."
+    if command -v distrobox &> /dev/null; then 
+        distrobox assemble create --file "$DISTROBOX_INI"
+    fi
+fi
+
+echo "✨ User Space Ready."
+```
+
+#### 2. The Logic (Why we made these decisions)
+
+*   **Brew vs DNF:**
+    *   **Decision:** Hybrid.
+    *   **Logic:** `dnf`/`rpm-ostree` handles system stability (drivers, VPN). `brew` handles CLI tools (bleeding edge, Mac parity). `flatpak` handles GUI apps (isolation).
+*   **Fish in OS:**
+    *   **Decision:** Kept in `rpm-ostree`.
+    *   **Logic:** Allows baking in `/etc/fish/conf.d/wavy-defaults.fish` so the shell is "Smart" (aliases, paths) for *any* user immediately upon creation.
+*   **Manual Binaries (Starship/Gum):**
+    *   **Decision:** Moved to Homebrew in `setup-user.sh`.
+    *   **Logic:** Fedora 42 repos were unreliable for these specific Go/Rust binaries on ARM64. Brew is reliable.
+*   **The "Split Brain" Podman:**
+    *   **Decision:** Force `sudo` for builds.
+    *   **Logic:** `bootc install` (VM builder) runs as root. It cannot see User images. Building as root ensures the image is visible to the installer.
+
+#### 3. The Unknowns (Potential Pitfalls)
+
+*   **Steam on ARM:**
+    *   *State:* We installed the `steam` RPM wrapper from Asahi repos.
+    *   *Risk:* It relies on `FEX-Emu` and `muvm`. Performance is "Okay" for 2D/light 3D, but heavy AAA games might struggle on 16GB RAM due to translation overhead.
+*   **Signal:**
+    *   *State:* Using COPR `elagostin/signal-desktop`.
+    *   *Risk:* It's a community build. If the maintainer stops, Signal stops updating.
+*   **Audio DSP:**
+    *   *State:* We baked in the `min-quantum` fix.
+    *   *Unknown:* Whether this *fully* resolves the "tinny" sound without EasyEffects. You need to test this on bare metal.
+*   **Gnome Software:**
+    *   *State:* Removed.
+    *   *Risk:* Firmware updates (`fwupd`) usually run via Gnome Software.
+    *   *Mitigation:* Use `fwupdmgr update` in terminal for firmware updates. (We should add this to the `Justfile`).
+
+---
+
+**This concludes the Cortex v1 Data Dump.** You have the Code, the Logic, and the Warnings.
