@@ -16,10 +16,11 @@
     *   **ALWAYS** save the detailed log to `.ai/status-report-[name].md`.
     *   **Console Output:** Must be minimal. Example: `✅ Task Complete. Details: .ai/status-report-v2.md`
 
-## ⚙️ OPERATIONAL WORKFLOW
-1.  **State Check:** Before editing, verify the file exists and you are in the correct directory (`pwd`).
-2.  **Validation:** Run `just --list` or verify YAML syntax locally before committing.
-3.  **Atomic Commits:** One logical change per commit.
+## ⚙️ OPERATIONAL WORKFLOW (THE INTERPRETER MODEL)
+1.  **Read First:** Always check `docs/knowledge-base/COMPENDIUM.md` for strategic alignment.
+2.  **State Check:** Before editing, verify the file exists and you are in the correct directory (`pwd`).
+3.  **Validation:** Run `just --list` or verify YAML syntax locally before committing.
+4.  **Atomic Commits:** One logical change per commit.
 
 ## 🏗️ ARCHITECTURE
 *   **Base:** Fedora Silverblue (Asahi Remix).
@@ -27,10 +28,9 @@
 *   **Apps:** Flatpak First (Warehouse/Bazaar). CLI Tools via Homebrew.
 
 ## 📜 MISSION PROTOCOL (HIGHEST PRIORITY)
-1.  **The Source:** Your primary instruction comes from `docs/MISSION.md`.
+1.  **The Source:** Your primary instruction comes from `docs/knowledge-base/COMPENDIUM.md`.
 2.  **The Loop:**
-    *   Read `docs/MISSION.md`.
-    *   Execute the first unchecked item `[ ]`.
-    *   Update the file to mark it `[x]`.
+    *   Read the Compendium.
+    *   Execute the task.
     *   Report status.
-3.  **No deviation:** Do not invent tasks not in the Mission file.
+3.  **No deviation:** Do not invent tasks not in the plan.

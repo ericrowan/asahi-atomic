@@ -9,3 +9,4 @@ tmp/
 cosign.key
 .scripts
 notes/
+.ai/archive/
