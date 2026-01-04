@@ -1,24 +1,20 @@
 #!/bin/bash
-
 set -ouex pipefail
 
-### Install packages
+# --- PACKAGES ---
+# Install standard packages via dnf5
+# (Add your custom tools here later, e.g., 'fish', 'zsh' if not in base)
+dnf5 install -y tmux fastfetch
 
-# Packages can be installed from any enabled yum repo on the image.
-# RPMfusion repos are available by default in ublue main images
-# List of rpmfusion packages can be found here:
-# https://mirrors.rpmfusion.org/mirrorlist?path=free/fedora/updates/43/x86_64/repoview/index.html&protocol=https&redirect=1
-
-# this installs a package from fedora repos
-dnf5 install -y tmux 
-
-# Use a COPR Example:
-#
-# dnf5 -y copr enable ublue-os/staging
-# dnf5 -y install package
-# Disable COPRs so they don't end up enabled on the final image:
-# dnf5 -y copr disable ublue-os/staging
-
-#### Example for enabling a System Unit File
-
+# --- SYSTEM UNITS ---
+# Enable Podman socket for containers
 systemctl enable podman.socket
+
+# --- ASAHI POST-PROCESSING ---
+# Critical: Regenerate initramfs so the machine can boot the new Asahi kernel
+echo "⚡ Regenerating initramfs for Asahi..."
+dracut --force --regenerate-all
+
+# --- CLEANUP ---
+# Ensure no temporary files persist
+rm -rf /tmp/*
