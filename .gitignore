@@ -1,12 +1,6 @@
-output/
-*.img
 .DS_Store
-*.log
-tmp/
-.ai/logs/
-.ai/tmp/
-.ai/audits/
 cosign.key
-.scripts
-notes/
-.ai/archive/
+_build_*
+output
+_build-*/**
+_archive/
